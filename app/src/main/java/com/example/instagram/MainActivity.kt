@@ -41,12 +41,11 @@ sealed class DestinationScreen(val route: String) {
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
-    vm: IgViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
         composable(DestinationScreen.Signup.route) {
-            SignupScreen(navController = navController, vm = vm)
+            SignupScreen(navController = navController, modifier = modifier)
         }
     }
 }
