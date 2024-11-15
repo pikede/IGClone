@@ -1,4 +1,4 @@
-package com.example.instagram.auth
+package com.example.instagram.auth.signup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.instagram.IgViewModel
 import com.example.instagram.R
+import com.example.instagram.core_ui.ShowErrorModal
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable
@@ -105,6 +106,10 @@ private fun SignUpScreenContent(
                     .clickable {}
             )
         }
+    }
+
+    state.error?.let { error ->
+        ShowErrorModal(error = error, onDismiss = { state.consumeError() })
     }
 }
 
