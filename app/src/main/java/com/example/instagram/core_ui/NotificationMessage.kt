@@ -8,10 +8,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.example.instagram.coroutineExtensions.OneTimeEvent
 
 // TODO create notification toast
+@Composable
+fun <T> OneTimeEvent<T>.ShowEventToast(
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(this.hasBeenHandled) {
+        if (this@ShowEventToast.hasBeenHandled.not()) {
+            Toast.makeText(context, this@ShowEventToast().toString(), Toast.LENGTH_LONG)
+                .show()
+        }
+    }
+}
+
 @Composable
 fun ShowErrorModal(
     error: Throwable,
@@ -30,7 +42,7 @@ fun ShowErrorModal(
 
     val coroutineScope = rememberCoroutineScope()
     LaunchedEffect(error, onDismiss, coroutineScope) {
-            onDismiss()
+        onDismiss()
     }
 }
 

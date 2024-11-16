@@ -1,6 +1,7 @@
 package com.example.instagram.auth.signup
 
 import androidx.compose.runtime.Immutable
+import com.example.instagram.coroutineExtensions.OneTimeEvent
 import com.example.instagram.coroutineExtensions.ViewEventSink
 import com.example.instagram.entities.User
 
@@ -12,6 +13,7 @@ data class SignupScreenState(
     val signedIn: Boolean = false,
     val inProgress: Boolean = false,
     val user: User? = null,
+    val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,  // TODO create custom throwable type with it's invokable composable that takes in a custom message
     val eventSink: ViewEventSink<SignupScreenEvent> = {},
 ) {

@@ -10,12 +10,11 @@ fun <T> eventSinkFlow(action: (T) -> Any): ViewEventSinkFlow<T> = flowOf {
     action(it)
 }
 
-//TODO is this necessary
-open class SingleEvent<out T>(val content: T) {
+open class OneTimeEvent<out T>(val content: T) {
     var hasBeenHandled = false
         private set
 
-    fun getContentOrNull(): T? {
+    operator fun invoke(): T? {
         return when {
             hasBeenHandled -> null
             else -> {

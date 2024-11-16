@@ -33,6 +33,7 @@ class IgViewModel @Inject constructor(
     private val signedInState = MutableStateFlow(default.signedIn)
     private val inProgressState = MutableStateFlow(default.inProgress)
     private val userState = MutableStateFlow(default.user)
+    val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
 
     val state = combine(
@@ -42,10 +43,20 @@ class IgViewModel @Inject constructor(
         signedInState,
         inProgressState,
         userState,
+        notificationState,
         errorState,
         eventSink(),
         ::SignupScreenState
     ).stateInDefault(viewModelScope, default)
+
+    init {
+//        auth.signOut()
+        val currentUser = auth.currentUser
+        signedInState.value = currentUser != null
+        currentUser?.uid?.let { userId ->
+            getUserData(userId)
+        }
+    }
 
     private fun eventSink(): ViewEventSinkFlow<SignupScreenEvent> = flowOf { event ->
         when (event) {
@@ -144,7 +155,19 @@ class IgViewModel @Inject constructor(
     }
 
     private fun getUserData(uid: String) {
-
+        inProgressState.value =
+            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
+        db.collection(USERS).document(uid)
+            .get()  // TODO create a helper that gets the document from firebase
+            .addOnSuccessListener {
+                val user = it.toObject(User::class.java)
+                userState.value = user
+                inProgressState.value = false
+            }
+            .addOnFailureListener {
+                errorState.value = it
+                Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
+            }
     }
 }
 
