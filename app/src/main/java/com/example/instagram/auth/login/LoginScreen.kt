@@ -31,7 +31,7 @@ import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui.ProgressSpinner
 import com.example.instagram.core_ui.ShowErrorModal
-import com.example.instagram.navigateTo
+import com.example.instagram.core_ui.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable
@@ -69,7 +69,7 @@ private fun LoginScreen(
                     .padding(16.dp)
             )
             Text(
-                text = "Logo",
+                text = "Login",
                 modifier = Modifier.padding(8.dp),
                 fontSize = AppTheme.typography.bodyLarge.fontSize,
                 fontFamily = FontFamily.SansSerif

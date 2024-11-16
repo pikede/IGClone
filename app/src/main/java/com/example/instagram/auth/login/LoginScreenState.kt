@@ -2,21 +2,24 @@ package com.example.instagram.auth.login
 
 import androidx.compose.runtime.Immutable
 import com.example.instagram.coroutineExtensions.ViewEventSink
+import com.example.instagram.entities.User
 
 @Immutable
 data class LoginScreenState(
     val email: String? = null,
     val password: String? = null,
+    val signedIn: Boolean = false,
     val inProgress: Boolean = false,
+    val user: User? = null,
     val error: Throwable? = null,
     val eventSink: ViewEventSink<LoginScreenEvent> = {},
 ) {
     fun consumeError() {
-
+        eventSink(LoginScreenEvent.ConsumeError)
     }
 
     fun login() {
-
+        eventSink(LoginScreenEvent.Login)
     }
 
     fun updateEmail(newEmail: String) {
@@ -29,7 +32,7 @@ data class LoginScreenState(
 
     companion object {
         val EMPTY = LoginScreenState()
-        // todo move previer here with eventsync events
+        // todo move preview here with eventsync events
     }
 }
 

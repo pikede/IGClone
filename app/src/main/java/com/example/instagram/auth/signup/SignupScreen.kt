@@ -35,7 +35,7 @@ import com.example.instagram.R
 import com.example.instagram.core_ui.ProgressSpinner
 import com.example.instagram.core_ui.ShowErrorModal
 import com.example.instagram.core_ui.ShowEventToast
-import com.example.instagram.navigateTo
+import com.example.instagram.core_ui.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable
