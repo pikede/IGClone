@@ -10,12 +10,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.instagram.auth.SignupScreen
+import com.example.instagram.auth.login.LoginRoute
+import com.example.instagram.auth.signup.SignupRoute
+import com.example.instagram.feed.FeedRoute
 import com.example.instagram.ui.theme.InstagramTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,17 +37,24 @@ class MainActivity : ComponentActivity() {
 
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
+    object Login : DestinationScreen("login")
+    object Feed : DestinationScreen("feed")
 }
 
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
-    vm: IgViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
         composable(DestinationScreen.Signup.route) {
-            SignupScreen(navController = navController, vm = vm)
+            SignupRoute(navController = navController, modifier = modifier)
+        }
+        composable(DestinationScreen.Login.route) {
+            LoginRoute(navController = navController, modifier = modifier)
+        }
+        composable(DestinationScreen.Feed.route) {
+            FeedRoute(navController = navController, modifier = modifier)
         }
     }
 }
