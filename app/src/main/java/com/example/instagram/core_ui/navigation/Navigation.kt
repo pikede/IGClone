@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui
+package com.example.instagram.core_ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

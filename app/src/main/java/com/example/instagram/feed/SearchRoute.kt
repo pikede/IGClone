@@ -13,22 +13,22 @@ import com.example.instagram.core_ui.navigation.BottomNavigationMenu
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
-fun FeedRoute(navController: NavController, modifier: Modifier = Modifier) {
-    FeedScreen(navController = navController, modifier = modifier)
+fun SearchRoute(navController: NavController, modifier: Modifier = Modifier) {
+    SearchScreen(navController = navController, modifier = modifier)
 }
 
 @Composable
-fun FeedScreen(navController: NavController, modifier: Modifier = Modifier) {
+private fun SearchScreen(navController: NavController, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Feed screen")
+            Text(text = "Search screen")
         }
-        BottomNavigationMenu(selectedItem = BottomNavigationItem.FEED, navController)
+        BottomNavigationMenu(selectedItem = BottomNavigationItem.SEARCH, navController)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun FeedScreenPreview() = InstagramTheme {
-    FeedScreen(navController = rememberNavController())
+private fun SearchScreenPreview() = InstagramTheme {
+    SearchScreen(navController = rememberNavController())
 }

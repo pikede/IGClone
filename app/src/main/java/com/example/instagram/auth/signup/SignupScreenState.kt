@@ -2,7 +2,7 @@ package com.example.instagram.auth.signup
 
 import androidx.compose.runtime.Immutable
 import com.example.instagram.core_domain.OneTimeEvent
-import com.example.instagram.coroutineExtensions.ViewEventSink
+import com.example.instagram.core_domain.ViewEventSink
 import com.example.instagram.entities.User
 
 @Immutable

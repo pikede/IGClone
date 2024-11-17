@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
-import com.example.instagram.coroutineExtensions.ViewEventSinkFlow
+import com.example.instagram.core_domain.ViewEventSinkFlow
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.entities.User
