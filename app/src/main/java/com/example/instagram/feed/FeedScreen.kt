@@ -1,9 +1,0 @@
-package com.example.instagram.feed
-
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-
-@Composable
-fun FeedRoute(modifier: Modifier = Modifier) {
-
-}

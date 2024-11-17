@@ -8,7 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.example.instagram.coroutineExtensions.OneTimeEvent
+import com.example.instagram.core_domain.OneTimeEvent
 
 // TODO create notification toast
 @Composable

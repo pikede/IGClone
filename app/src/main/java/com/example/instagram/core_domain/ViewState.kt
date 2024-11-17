@@ -1,4 +1,4 @@
-package com.example.instagram.coroutineExtensions
+package com.example.instagram.core_domain
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf

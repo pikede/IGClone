@@ -31,7 +31,7 @@ data class LoginScreenState(
     }
 
     companion object {
-        val EMPTY = LoginScreenState()
+        val Empty = LoginScreenState()
         // todo move preview here with eventsync events
     }
 }

@@ -1,4 +1,4 @@
-package com.example.instagram.auth.login
+package com.example.instagram.auth.signup
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -23,31 +23,58 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
+import com.example.instagram.IgViewModel
 import com.example.instagram.R
+import com.example.instagram.core_ui.CheckSignedIn
 import com.example.instagram.core_ui.ProgressSpinner
 import com.example.instagram.core_ui.ShowErrorModal
+import com.example.instagram.core_ui.ShowEventToast
 import com.example.instagram.core_ui.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable
-fun LoginScreen(
+fun SignupRoute(
     navController: NavController,
     modifier: Modifier = Modifier,
-    loginViewmodel: LoginViewmodel = hiltViewModel(),
+    vm: IgViewModel = hiltViewModel(),
 ) {
-    val state by loginViewmodel.state.collectAsStateWithLifecycle()
-    LoginScreen(navController, state, modifier)
+    SignupScreen(vm, navController, modifier)
 }
 
 @Composable
-private fun LoginScreen(
+private fun SignupScreen(
+    vm: IgViewModel,
     navController: NavController,
-    state: LoginScreenState,
+    modifier: Modifier,
+) {
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    when {
+        state.signedIn -> CheckSignedIn(
+            signedIn = state.signedIn,
+            navController = navController,
+            modifier = modifier
+        )
+
+        else -> SignUpScreenContent(
+            navController = navController,
+            state = state,
+            modifier = modifier
+        )
+    }
+}
+
+@Composable
+private fun SignUpScreenContent(
+    navController: NavController,
+    state: SignupScreenState,
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
@@ -55,54 +82,59 @@ private fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .verticalScroll(
-                    rememberScrollState()
-                ), horizontalAlignment = Alignment.CenterHorizontally
+                .wrapContentSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(R.drawable.ig_logo),
+                painter = painterResource(id = R.drawable.ig_logo),
                 contentDescription = null,
                 modifier = Modifier
                     .width(250.dp)
                     .padding(top = 16.dp)
-                    .padding(16.dp)
+                    .padding(8.dp)
             )
             Text(
-                text = "Login",
+                text = "SignUp",
                 modifier = Modifier.padding(8.dp),
-                fontSize = AppTheme.typography.bodyLarge.fontSize,
+                fontSize = AppTheme.typography.titleLarge.fontSize,
                 fontFamily = FontFamily.SansSerif
             )
             OutlinedTextField(
+                value = state.userName.orEmpty(),
+                onValueChange = { state.eventSink(SignupScreenEvent.UpdateName(it)) },
+                modifier = Modifier.padding(8.dp),
+                label = { Text(text = "Username") }
+            )
+            OutlinedTextField(
                 value = state.email.orEmpty(),
-                onValueChange = { state.updateEmail(it) },
+                onValueChange = { state.eventSink(SignupScreenEvent.UpdateEmail(it)) },
                 modifier = Modifier.padding(8.dp),
                 label = { Text(text = "Email") },
             )
             OutlinedTextField(
                 value = state.password.orEmpty(),
-                onValueChange = { state.updatePassword(it) },
+                onValueChange = { state.eventSink(SignupScreenEvent.UpdatePassword(it)) },
                 modifier = Modifier.padding(8.dp),
                 label = { Text(text = "Password") },
                 visualTransformation = PasswordVisualTransformation()
             )
             Button(
                 onClick = {
-                    focusManager.clearFocus(force = true) // clear focus when button is clicked, dismiss keyboard
-                    state.login()
+                    state.signup()
+                    focusManager.clearFocus(force = true)// clear focus when button is clicked, dismiss keyboard /
                 },
                 modifier = Modifier.padding(8.dp)
             ) {
-                Text("Login")
+                Text("Sign Up")
             }
             Text(
-                text = "New here? Go to signup ->",
+                text = "Already a user? Go to login ->",
                 color = Color.Blue,
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable {
-                        navigateTo(navController, DestinationScreen.Signup)
+                        navigateTo(navController, DestinationScreen.Login)
                     }
             )
         }
@@ -112,4 +144,11 @@ private fun LoginScreen(
     state.error?.let { error ->
         ShowErrorModal(error = error, onDismiss = { state.consumeError() })
     }
+    state.notification?.ShowEventToast()
+}
+
+@Preview
+@Composable
+private fun SignupScreenPreview() {
+    SignUpScreenContent(rememberNavController(), SignupScreenState.Empty)
 }

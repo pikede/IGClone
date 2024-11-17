@@ -50,7 +50,7 @@ class IgViewModel @Inject constructor(
     ).stateInDefault(viewModelScope, default)
 
     init {
-//        auth.signOut()
+        auth.signOut()
         val currentUser = auth.currentUser
         signedInState.value = currentUser != null
         currentUser?.uid?.let { userId ->
@@ -155,7 +155,8 @@ class IgViewModel @Inject constructor(
     }
 
     private fun getUserData(uid: String) {
-        inProgressState.value = true // TODO make there's no issue when this is reached as false is called when @getUserData is called
+        inProgressState.value =
+            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
         db.collection(USERS).document(uid)
             .get()  // TODO create a helper that gets the document from firebase in an Interactor
             .addOnSuccessListener {

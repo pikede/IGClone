@@ -22,7 +22,7 @@ class LoginViewmodel @Inject constructor(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage,
 ) : ViewModel() {
-    val default = LoginScreenState.EMPTY
+    val default = LoginScreenState.Empty
     val emailState = MutableStateFlow(default.email)
     val passwordState = MutableStateFlow(default.password)
     val signedInState = MutableStateFlow(default.signedIn)
@@ -40,6 +40,14 @@ class LoginViewmodel @Inject constructor(
         eventSink(),
         ::LoginScreenState
     ).stateInDefault(viewModelScope, default)
+
+    init {
+        val currentUser = auth.currentUser
+        signedInState.value = currentUser != null
+        currentUser?.uid?.let { userId ->
+            getUserData(userId)
+        }
+    }
 
     private fun eventSink(): ViewEventSinkFlow<LoginScreenEvent> = flowOf { event ->
         when (event) {
@@ -81,7 +89,8 @@ class LoginViewmodel @Inject constructor(
 
     // TODO move to interactor and remove the duplicate method in @IgViewmodel
     private fun getUserData(uid: String) {
-        inProgressState.value = true // TODO make there's no issue when this is reached as false is called when @getUserData is called
+        inProgressState.value =
+            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
         db.collection(USERS).document(uid)
             .get()  // TODO create a helper that gets the document from firebase in an Interactor
             .addOnSuccessListener {
