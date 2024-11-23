@@ -3,7 +3,6 @@ package com.example.instagram
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -17,8 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.instagram.auth.login.LoginRoute
 import com.example.instagram.auth.signup.SignupRoute
 import com.example.instagram.feed.FeedRoute
-import com.example.instagram.feed.MyPostsRoute
 import com.example.instagram.feed.SearchRoute
+import com.example.instagram.my_posts.MyPostsRoute
+import com.example.instagram.profile.ProfileRoute
 import com.example.instagram.ui.theme.InstagramTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Don't need edge to edge for now
+//        enableEdgeToEdge() // Don't need edge to edge for now
         setContent {
             InstagramTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -37,19 +37,23 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// todo move to core-ui module
 sealed class DestinationScreen(val route: String) {
     object Signup : DestinationScreen("signup")
     object Login : DestinationScreen("login")
     object Feed : DestinationScreen("feed")
     object Search : DestinationScreen("search")
     object MyPosts : DestinationScreen("myPosts")
+    object Profile : DestinationScreen("profile")
 }
 
+// todo move to core-ui module
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    /// todo check if navcontroller can be without passing to composables
     NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
         composable(DestinationScreen.Signup.route) {
             SignupRoute(navController = navController, modifier = modifier)
@@ -65,6 +69,9 @@ fun InstagramApp(
         }
         composable(DestinationScreen.MyPosts.route) {
             MyPostsRoute(navController = navController, modifier = modifier)
+        }
+        composable(DestinationScreen.Profile.route){
+            ProfileRoute(navController = navController, modifier = modifier)
         }
     }
 }

@@ -32,10 +32,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.IgViewModel
 import com.example.instagram.R
-import com.example.instagram.core_ui.navigation.CheckSignedIn
 import com.example.instagram.core_ui.ProgressSpinner
 import com.example.instagram.core_ui.ShowErrorModal
 import com.example.instagram.core_ui.ShowEventToast
+import com.example.instagram.core_ui.navigation.CheckSignedIn
 import com.example.instagram.core_ui.navigation.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
@@ -60,7 +60,6 @@ private fun SignupScreen(
         state.signedIn -> CheckSignedIn(
             signedIn = state.signedIn,
             navController = navController,
-            modifier = modifier
         )
 
         else -> SignUpScreenContent(

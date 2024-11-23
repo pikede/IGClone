@@ -2,23 +2,15 @@ package com.example.instagram.core_domain
 
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import app.tivi.util.cancellableRunCatching
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.withTimeout
-
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 abstract class Interactor<in P, R> {
     private val loadingState = MutableStateFlow(State())
@@ -27,7 +19,6 @@ abstract class Interactor<in P, R> {
     suspend operator fun invoke(
         params: P,
         timeout: Duration = DefaultTimeout,
-        userInitiated: Boolean = params.isUserInitiated,
     ): Result<R> = doWork(params) as Result<R>
 
     protected abstract suspend fun doWork(params: P): R

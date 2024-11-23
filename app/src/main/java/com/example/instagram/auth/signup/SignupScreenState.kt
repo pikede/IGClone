@@ -6,7 +6,7 @@ import com.example.instagram.core_domain.ViewEventSink
 import com.example.instagram.entities.User
 
 @Immutable
-data class SignupScreenState(
+internal data class SignupScreenState(
     val userName: String? = null,
     val password: String? = null,
     val email: String? = null,

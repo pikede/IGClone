@@ -56,7 +56,6 @@ private fun LoginScreen(
         state.signedIn -> CheckSignedIn(
             signedIn = state.signedIn,
             navController = navController,
-            modifier = modifier
         )
 
         else -> LoginScreenContent(

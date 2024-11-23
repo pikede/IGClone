@@ -11,7 +11,6 @@ import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.entities.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -24,7 +23,6 @@ val USERNAME = "username"
 class IgViewModel @Inject constructor(
     val auth: FirebaseAuth,
     val db: FirebaseFirestore,
-    val storage: FirebaseStorage,
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -36,7 +34,7 @@ class IgViewModel @Inject constructor(
     val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
 
-    val state = combine(
+    internal val state = combine(
         userNameState,
         passwordState,
         emailState,
@@ -50,7 +48,7 @@ class IgViewModel @Inject constructor(
     ).stateInDefault(viewModelScope, default)
 
     init {
-        auth.signOut()
+//        auth.signOut()
         val currentUser = auth.currentUser
         signedInState.value = currentUser != null
         currentUser?.uid?.let { userId ->
