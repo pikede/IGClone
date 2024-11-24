@@ -1,12 +1,12 @@
 package com.example.instagram.auth.signup
 
 import androidx.compose.runtime.Immutable
-import com.example.instagram.core_domain.OneTimeEvent
-import com.example.instagram.coroutineExtensions.ViewEventSink
+import com.example.instagram.common.extensions.OneTimeEvent
+import com.example.instagram.core_domain.ViewEventSink
 import com.example.instagram.entities.User
 
 @Immutable
-data class SignupScreenState(
+internal data class SignupScreenState(
     val userName: String? = null,
     val password: String? = null,
     val email: String? = null,

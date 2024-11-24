@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui
+package com.example.instagram.core_ui_components
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -8,7 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.example.instagram.core_domain.OneTimeEvent
+import com.example.instagram.common.extensions.OneTimeEvent
 
 // TODO create notification toast
 @Composable
