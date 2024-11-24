@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.USERS
-import com.example.instagram.core_domain.OneTimeEvent
+import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.core_domain.ViewEventSinkFlow
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault

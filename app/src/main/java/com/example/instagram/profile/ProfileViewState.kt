@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.instagram.core_data.Fakes
-import com.example.instagram.core_domain.OneTimeEvent
+import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.core_domain.ViewEventSink
 import com.example.instagram.entities.User
 

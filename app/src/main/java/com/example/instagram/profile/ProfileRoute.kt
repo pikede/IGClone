@@ -30,12 +30,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.instagram.DestinationScreen
-import com.example.instagram.core_ui.BlackTextTransparentContainer
-import com.example.instagram.core_ui.CommonDivider
-import com.example.instagram.core_ui.FullscreenLoading
-import com.example.instagram.core_ui.ImagePlaceHolder
-import com.example.instagram.core_ui.ProgressSpinner
-import com.example.instagram.core_ui.navigation.navigateTo
+import com.example.instagram.core_ui_components.BlackTextTransparentContainer
+import com.example.instagram.core_ui_components.CommonDivider
+import com.example.instagram.core_ui_components.FullscreenLoading
+import com.example.instagram.core_ui_components.ImagePlaceHolder
+import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.common.ui.navigation.navigateTo
 
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {

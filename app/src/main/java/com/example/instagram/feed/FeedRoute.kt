@@ -11,8 +11,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.instagram.core_ui.navigation.BottomNavigationItem
-import com.example.instagram.core_ui.navigation.BottomNavigationMenu
+import com.example.instagram.common.ui.navigation.BottomNavigationItem
+import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.my_posts.MyPostsViewModel
 import com.example.instagram.my_posts.MyPostsViewState
 import com.example.instagram.ui.theme.InstagramTheme

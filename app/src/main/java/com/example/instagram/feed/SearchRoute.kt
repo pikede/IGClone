@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.instagram.core_ui.navigation.BottomNavigationItem
-import com.example.instagram.core_ui.navigation.BottomNavigationMenu
+import com.example.instagram.common.ui.navigation.BottomNavigationItem
+import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable

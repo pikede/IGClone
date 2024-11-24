@@ -31,10 +31,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
-import com.example.instagram.core_ui.navigation.CheckSignedIn
-import com.example.instagram.core_ui.ProgressSpinner
-import com.example.instagram.core_ui.ShowErrorModal
-import com.example.instagram.core_ui.navigation.navigateTo
+import com.example.instagram.common.ui.navigation.CheckSignedIn
+import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.ShowErrorModal
+import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable

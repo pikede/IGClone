@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui.navigation
+package com.example.instagram.common.ui.navigation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

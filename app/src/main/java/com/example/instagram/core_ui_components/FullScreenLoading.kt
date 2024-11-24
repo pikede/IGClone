@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui
+package com.example.instagram.core_ui_components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

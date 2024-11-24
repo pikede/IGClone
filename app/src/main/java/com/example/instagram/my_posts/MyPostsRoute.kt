@@ -32,11 +32,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
-import com.example.instagram.core_ui.ProgressSpinner
-import com.example.instagram.core_ui.UserImageCard
-import com.example.instagram.core_ui.navigation.BottomNavigationItem
-import com.example.instagram.core_ui.navigation.BottomNavigationMenu
-import com.example.instagram.core_ui.navigation.navigateTo
+import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.UserImageCard
+import com.example.instagram.common.ui.navigation.BottomNavigationItem
+import com.example.instagram.common.ui.navigation.BottomNavigationMenu
+import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable

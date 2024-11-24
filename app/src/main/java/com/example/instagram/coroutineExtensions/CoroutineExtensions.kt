@@ -1,10 +1,13 @@
 package com.example.instagram.coroutineExtensions
 
+import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 
 // TODO move to separate module to be reused
@@ -16,6 +19,28 @@ fun <T> Flow<T>.stateInDefault(
     started = SharingStarted.WhileSubscribed(5000), // state resets after 5 seconds when no subscribers are present
     initialValue = initialValue
 )
+
+context(ViewModel)
+fun <T> Flow<T>.stateInDefault(
+    scope: CoroutineScope,
+    initialValue: T,
+): StateFlow<T> = stateIn(
+    scope = scope,
+    started = SharingStarted.WhileSubscribed(5000), // state resets after 5 seconds when no subscribers are present
+    initialValue = initialValue
+)
+
+/**
+ * Delays given [target]'s emission for [timeInMillis]
+ * i.e. skips emission of [target] if something else is emitted before [timeInMillis]
+ */
+
+fun <T> Flow<T>.delayItem(timeInMillis: Long, target: T): Flow<T> = mapLatest {
+    if (it == target) {
+        delay(timeInMillis)
+    }
+    it
+}
 
 inline fun <T1, T2, T3, T4, T5, T6, T7, R> combine(
     flow1: Flow<T1>,
