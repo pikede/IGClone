@@ -30,12 +30,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.instagram.DestinationScreen
-import com.example.instagram.core_ui_components.BlackTextTransparentContainer
+import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.FullscreenLoading
 import com.example.instagram.core_ui_components.ImagePlaceHolder
 import com.example.instagram.core_ui_components.ProgressSpinner
-import com.example.instagram.common.ui.navigation.navigateTo
 
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {
@@ -67,6 +67,7 @@ fun ProfileScreen(
             state = state,
             onBack = { navController.popBackStack() },
             onSave = { state.onSave() },
+            navController = navController,
             onLogout = {
                 state.onLogout()
                 navigateTo(navController, DestinationScreen.Login)
@@ -82,9 +83,11 @@ fun ProfileScreenContent(
     onBack: () -> Boolean,
     onSave: () -> Unit,
     onLogout: () -> Unit,
+    navController: NavController,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(8.dp)
@@ -101,7 +104,7 @@ fun ProfileScreenContent(
 
         CommonDivider()
 
-        ProfileImage(state = state)
+        ProfileImage(state = state, navController = navController)
 
         CommonDivider()
 
@@ -115,7 +118,7 @@ fun ProfileScreenContent(
             TextField(
                 value = state.user?.name.orEmpty(),
                 onValueChange = { it -> state.updateName(it) },
-                colors = BlackTextTransparentContainer(),
+                colors = BlackTransparentTextContainer(),
                 singleLine = true
             )
         }
@@ -131,7 +134,7 @@ fun ProfileScreenContent(
             TextField(
                 value = state.user?.userName.orEmpty(),
                 onValueChange = state::updateUserName,
-                colors = BlackTextTransparentContainer(),
+                colors = BlackTransparentTextContainer(),
                 singleLine = true
             )
         }
@@ -148,7 +151,7 @@ fun ProfileScreenContent(
             TextField(
                 value = state.user?.bio.orEmpty(),
                 onValueChange = state::updateBio,
-                colors = BlackTextTransparentContainer(),
+                colors = BlackTransparentTextContainer(),
                 singleLine = false,
                 modifier = Modifier.height(150.dp)
             )
@@ -167,6 +170,7 @@ fun ProfileScreenContent(
 @Composable
 private fun ProfileImage(
     state: ProfileViewState,
+    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
 

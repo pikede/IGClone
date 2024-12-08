@@ -1,15 +1,23 @@
 package com.example.instagram.my_posts
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -17,10 +25,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,11 +42,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
-import com.example.instagram.core_ui_components.ProgressSpinner
-import com.example.instagram.core_ui_components.UserImageCard
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.core_ui_components.ImagePlaceHolder
+import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.UserImageCard
+import com.example.instagram.new_post.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -56,6 +68,10 @@ private fun MyPosts(
         navController = navController,
         modifier = modifier
     )
+
+    LaunchedEffect(Unit) {
+        vm.refreshPosts()
+    }
 }
 
 @Composable
@@ -64,10 +80,21 @@ private fun MyPostsScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
+    val newPostImageLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                val encoded = Uri.encode(it.toString())
+                val route = DestinationScreen.NewPost.createRoute(encoded)
+                navController.navigate(route)
+            }
+        }
     Column(modifier) {
         Column(modifier = Modifier.weight(1f)) {
             Row {
-                ProfileImage(imageUrl = state.user?.imageUrl, onClick = {})
+                ProfileImage(imageUrl = state.user?.imageUrl, onClick = {
+                    // todo extract "image/* to constant
+                    newPostImageLauncher.launch("image/*") // check for any type of image on the device
+                })
                 // TODO put texts into lazy row
                 Text(
                     text = "15\nPosts",
@@ -111,9 +138,21 @@ private fun MyPostsScreen(
             ) {
                 Text(text = "Edit Profile", color = Color.Black)
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Posts list")
-            }
+            PostList(
+                state = state,
+                isContextLoading = state.inProgress,
+                postsLoading = state.refreshPostsProgress,
+                posts = state.posts,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(1.dp)
+                    .fillMaxSize(),
+                onPostClick = { /*post ->
+                    navigateTo(
+                        navController,
+                        DestinationScreen.SinglePost,
+                        post.postId*/
+                })
         }
         BottomNavigationMenu(selectedItem = BottomNavigationItem.POSTS, navController)
     }
@@ -152,6 +191,92 @@ private fun ProfileImage(
                 modifier = Modifier.background(color = Color.White)
             )
         }
+    }
+}
+
+@Composable
+private fun PostList(
+    state: MyPostsViewState,
+    isContextLoading: Boolean,
+    postsLoading: Boolean,
+    posts: List<PostData>,
+    modifier: Modifier = Modifier,
+    onPostClick: (PostData) -> Unit,
+) {
+    if (postsLoading) {
+        ProgressSpinner()
+    } else if (posts.isEmpty()) {
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (!isContextLoading) Text(text = "No posts available")
+        }
+    } else {
+        LazyColumn(modifier = modifier) {
+            val rows = arrayListOf<PostRow>()
+            var currentRow = PostRow()
+            rows.add(currentRow)
+            for (post in posts) {
+                if (currentRow.isFull()) {
+                    currentRow = PostRow()
+                    rows.add(currentRow)
+                }
+                currentRow.addPost(post)
+            }
+            items(items = rows) { row ->
+                PostsRow(postRow = row, onPostClick = onPostClick)
+            }
+        }
+    }
+}
+
+@Composable
+fun PostsRow(
+    postRow: PostRow,
+    onPostClick: (PostData) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(120.dp)
+    ) {
+        PostImage(
+            imageUrl = postRow.post1?.postImage,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { postRow.post1?.let { post -> onPostClick(post) } })
+        PostImage(
+            imageUrl = postRow.post2?.postImage,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { postRow.post2?.let { post -> onPostClick(post) } })
+        PostImage(
+            imageUrl = postRow.post3?.postImage,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { postRow.post3?.let { post -> onPostClick(post) } })
+    }
+}
+
+@Composable
+fun PostImage(imageUrl: String?, modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        var modifier = Modifier
+            .padding(1.dp)
+            .fillMaxSize()
+
+        if (imageUrl == null) {
+            modifier = modifier.clickable(enabled = false) {}
+        }
+
+        ImagePlaceHolder(
+            data = imageUrl,
+            contentScale = ContentScale.Crop,
+            modifier = modifier,
+        )
     }
 }
 

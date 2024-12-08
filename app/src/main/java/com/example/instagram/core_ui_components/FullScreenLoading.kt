@@ -37,7 +37,7 @@ fun ProgressSpinner(modifier: Modifier = Modifier) {
 fun FullscreenLoading(
     isLoading: Boolean,
     modifier: Modifier = Modifier,
-    icon: @Composable (Modifier) -> Unit = {},
+    icon: @Composable (Modifier) -> Unit = {}, // todo add logo as default icon
     content: @Composable BoxScope.() -> Unit = { },
 ) {
     Box(
@@ -48,7 +48,7 @@ fun FullscreenLoading(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Cyan)
+                    .background(Color.Gray)
             ) {
                 icon(
                     Modifier
