@@ -4,17 +4,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
-import com.example.instagram.my_posts.MyPostsViewModel
-import com.example.instagram.my_posts.MyPostsViewState
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -26,11 +21,10 @@ fun FeedRoute(navController: NavController, modifier: Modifier = Modifier) {
 private fun Feed(
     navController: NavController,
     modifier: Modifier = Modifier,
-    vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(),
+//    vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(), TODO create viewmodel for this
 ) {
-    val state by vm.state.collectAsStateWithLifecycle()
+//    val state by vm.state.collectAsStateWithLifecycle() TODO observe state from the viewmodel
     FeedContent(
-        state = state,
         navController = navController,
         modifier = modifier
     )
@@ -38,7 +32,6 @@ private fun Feed(
 
 @Composable
 private fun FeedContent(
-    state: MyPostsViewState,
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {

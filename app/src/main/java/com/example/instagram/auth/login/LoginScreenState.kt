@@ -1,7 +1,7 @@
 package com.example.instagram.auth.login
 
 import androidx.compose.runtime.Immutable
-import com.example.instagram.core_domain.ViewEventSink
+import com.example.instagram.common.extensions.ViewEventSink
 import com.example.instagram.entities.User
 
 @Immutable

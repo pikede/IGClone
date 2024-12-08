@@ -18,6 +18,7 @@ import com.example.instagram.auth.signup.SignupRoute
 import com.example.instagram.feed.FeedRoute
 import com.example.instagram.feed.SearchRoute
 import com.example.instagram.my_posts.MyPostsRoute
+import com.example.instagram.new_post.NewPostRoute
 import com.example.instagram.profile.ProfileRoute
 import com.example.instagram.ui.theme.InstagramTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,7 +27,6 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge() // Don't need edge to edge for now
         setContent {
             InstagramTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -45,6 +45,9 @@ sealed class DestinationScreen(val route: String) {
     object Search : DestinationScreen("search")
     object MyPosts : DestinationScreen("myPosts")
     object Profile : DestinationScreen("profile")
+    object NewPost : DestinationScreen("newPost/{imageUri}") {
+        fun createRoute(uri: String) = "newPost/$uri"
+    }
 }
 
 // todo move to core-ui module
@@ -70,8 +73,14 @@ fun InstagramApp(
         composable(DestinationScreen.MyPosts.route) {
             MyPostsRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.Profile.route){
+        composable(DestinationScreen.Profile.route) {
             ProfileRoute(navController = navController, modifier = modifier)
+        }
+        composable(DestinationScreen.NewPost.route) { navBackstackEntry ->
+            val imageUri = navBackstackEntry.arguments?.getString("imageUri")
+            imageUri?.let {
+                NewPostRoute(navController = navController, encodedUri = it, modifier = modifier)
+            }
         }
     }
 }

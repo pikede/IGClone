@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun BlackTextTransparentContainer(
+fun BlackTransparentTextContainer(
     textColor: Color = Color.Black,
     backgroundColor: Color = Color.Transparent,
 ): TextFieldColors = TextFieldDefaults.colors(

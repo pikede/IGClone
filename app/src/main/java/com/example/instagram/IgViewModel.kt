@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
-import com.example.instagram.core_domain.ViewEventSinkFlow
+import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.USERNAME
+import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.entities.User
@@ -15,9 +17,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
-
-val USERS = "users"
-val USERNAME = "username"
 
 @HiltViewModel
 class IgViewModel @Inject constructor(
