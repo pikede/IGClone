@@ -62,16 +62,6 @@ internal data class NewPostViewState(
     }
 }
 
-data class PostData(
-    val postId: String? = null,
-    val userId: String? = null,
-    val username: String? = null,
-    val userImage: String? = null,
-    val postImage: String? = null,
-    val postDescription: String? = null,
-    val time: Long? = null,
-)
-
 sealed interface NewPostScreenEvent {
     object ConsumeError : NewPostScreenEvent
     data class Post(val imageUri: String, val onPostSuccess: () -> Unit) : NewPostScreenEvent

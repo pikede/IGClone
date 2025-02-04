@@ -1,4 +1,4 @@
-package com.example.instagram.my_posts
+package com.example.instagram.single_post
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -20,11 +20,11 @@ import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 @HiltViewModel
-internal class MyPostsViewModel @Inject constructor(
+internal class SinglePostViewModel @Inject constructor(
     val auth: FirebaseAuth,
     val db: FirebaseFirestore,
 ) : ViewModel() {
-    private val default = MyPostsViewState.Companion.Empty
+    private val default = SinglePostViewState.Companion.Empty
     private val inProgressState = MutableStateFlow(default.inProgress)
     private val userState = MutableStateFlow(default.user)
     val notificationState = MutableStateFlow(default.notification)
@@ -42,7 +42,7 @@ internal class MyPostsViewModel @Inject constructor(
         postsState,
         isSignedInState,
         eventSink(),
-        ::MyPostsViewState
+        ::SinglePostViewState
     ).stateInDefault(viewModelScope, default)
 
     init {
@@ -69,9 +69,9 @@ internal class MyPostsViewModel @Inject constructor(
             }
     }
 
-    private fun eventSink(): ViewEventSinkFlow<MyPostsScreenEvent> = flowOf { event ->
+    private fun eventSink(): ViewEventSinkFlow<SinglePostScreenEvent> = flowOf { event ->
         when (event) {
-            MyPostsScreenEvent.ConsumeError -> errorState.value = null
+            SinglePostScreenEvent.ConsumeError -> errorState.value = null
         }
     }
 

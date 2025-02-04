@@ -54,8 +54,6 @@ firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.r
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
-firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "dagger" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "dagger" }
@@ -70,3 +68,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "dagger" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+kotlin-gradle-plugin = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
