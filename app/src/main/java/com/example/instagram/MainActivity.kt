@@ -15,9 +15,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.auth.login.LoginRoute
 import com.example.instagram.auth.signup.SignupRoute
-import com.example.instagram.domain.ig_domain.PostData
 import com.example.instagram.feed.FeedRoute
 import com.example.instagram.feed.SearchRoute
+import com.example.instagram.models.PostData
 import com.example.instagram.my_posts.MyPostsRoute
 import com.example.instagram.new_post.NewPostRoute
 import com.example.instagram.profile.ProfileRoute
@@ -86,6 +86,7 @@ fun InstagramApp(
             }
         }
         composable(DestinationScreen.SinglePost.route) { navBackstackEntry ->
+            // todo find out why postdata is null
             val postData =
                 navController.previousBackStackEntry?.arguments?.getParcelable<PostData>("post")
             postData?.let {

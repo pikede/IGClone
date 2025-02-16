@@ -9,7 +9,7 @@ import androidx.compose.runtime.setValue
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
 import com.example.instagram.core_data.Fakes
-import com.example.instagram.entities.User
+import com.example.instagram.models.User
 
 @Immutable
 internal data class NewPostViewState(

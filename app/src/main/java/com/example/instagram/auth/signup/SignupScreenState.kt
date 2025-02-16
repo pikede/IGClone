@@ -3,7 +3,7 @@ package com.example.instagram.auth.signup
 import androidx.compose.runtime.Immutable
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
-import com.example.instagram.entities.User
+import com.example.instagram.models.User
 
 @Immutable
 internal data class SignupScreenState(

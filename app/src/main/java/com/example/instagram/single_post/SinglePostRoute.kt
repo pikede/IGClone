@@ -34,7 +34,7 @@ import coil.compose.rememberImagePainter
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.CommonImage
-import com.example.instagram.domain.ig_domain.PostData
+import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable

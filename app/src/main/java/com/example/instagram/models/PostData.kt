@@ -1,9 +1,11 @@
-package com.example.instagram.domain.ig_domain
+package com.example.instagram.models
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
+@Immutable
 data class PostData(
     val postId: String? = null,
     val userId: String? = null,

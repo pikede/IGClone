@@ -1,6 +1,6 @@
 package com.example.instagram.core_data
 
-import com.example.instagram.entities.User
+import com.example.instagram.models.User
 import java.util.UUID
 
 object Fakes {

@@ -2,7 +2,7 @@ package com.example.instagram.auth.login
 
 import androidx.compose.runtime.Immutable
 import com.example.instagram.common.extensions.ViewEventSink
-import com.example.instagram.entities.User
+import com.example.instagram.models.User
 
 @Immutable
 data class LoginScreenState(

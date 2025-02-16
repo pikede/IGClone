@@ -49,7 +49,7 @@ import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.ProgressSpinner
 import com.example.instagram.core_ui_components.UserImageCard
-import com.example.instagram.domain.ig_domain.PostData
+import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -221,6 +221,7 @@ private fun PostList(
             val rows = arrayListOf<PostRow>()
             var currentRow = PostRow()
             rows.add(currentRow)
+            // todo use chunks/chunkify instead
             for (post in posts) {
                 if (currentRow.isFull()) {
                     currentRow = PostRow()
