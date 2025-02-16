@@ -2,16 +2,22 @@ package com.example.instagram.profile
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.entities.User
+import com.example.instagram.models.PostData
+import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -161,7 +167,78 @@ internal class ProfileViewModel @Inject constructor(
             uri = uri,
             onSuccess = {
                 createOrUpdateProfile(imageUrl = it.toString())
+                updatePostUserImageData(it.toString())
             })
+    }
+
+    // todo move to interactor
+    private fun updatePostUserImageData(imageUrl: String) {
+        val currentuUid = auth.currentUser?.uid
+        db.collection(POSTS)
+            .whereEqualTo("userId", currentuUid)
+            .get()
+            .addOnSuccessListener {
+                val posts = mutableStateOf<List<PostData>>(arrayListOf())
+                convertPosts(it, posts)
+                val refs = arrayListOf<DocumentReference>()
+                for (post in posts.value) {
+                    post.postId?.let { id ->
+                        refs.add(db.collection(POSTS).document(id))
+                    }
+                }
+                if (refs.isNotEmpty()) {
+                    db.runBatch { batch ->
+                        for (ref in refs) {
+                            batch.update(ref, "userImage", imageUrl)
+                        }
+                    }.addOnSuccessListener {
+                        refreshPosts()
+                    }
+                }
+            }
+    }
+
+    // todo move to Interactor
+    internal fun refreshPosts() {
+        val currentUid = auth.currentUser?.uid
+        currentUid?.let {
+            inProgressState.value = true
+            db.collection(POSTS)
+                .whereEqualTo("userId", currentUid).get()
+                .addOnSuccessListener { documents ->
+                    convertPosts(documents)
+                }.addOnFailureListener {
+                    errorState.value = it
+                    notificationState.value = OneTimeEvent("Cannot fetch posts")
+                }
+            inProgressState.value = false
+        } ?: run {
+            onLogout()
+            errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
+        }
+    }
+
+    // todo move create Interactor for this
+    private fun convertPosts(documents: QuerySnapshot, outState: MutableState<List<PostData>>) {
+        val newPosts = mutableListOf<PostData>()
+        for (document in documents) {
+            val post = document.toObject(PostData::class.java)
+            newPosts.add(post)
+        }
+        val sortedPosits = newPosts.sortedByDescending { it.time }
+        outState.value = sortedPosits
+    }
+
+    // todo move create Interactor for this
+    private fun convertPosts(documents: QuerySnapshot) {
+        /* todo duplicate
+        val newPosts = mutableListOf<PostData>()
+                for (document in documents) {
+                    val post = document.toObject(PostData::class.java)
+                    newPosts.add(post)
+                }
+                val sortedPosits = newPosts.sortedByDescending { it.time }
+                postsState.value = sortedPosits*/
     }
 
     // todo create interactor for this

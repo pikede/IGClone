@@ -13,7 +13,8 @@ import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.entities.User
+import com.example.instagram.models.PostData
+import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -106,7 +107,8 @@ internal class NewPostViewModel @Inject constructor(
                 userImage = currentUserImage,
                 postImage = imageUri.toString(),
                 postDescription = descriptionState.value,
-                time = System.currentTimeMillis()
+                time = System.currentTimeMillis(),
+                likes = listOf()
             )
             db.collection(POSTS).document(postUuid).set(post)
                 .addOnSuccessListener {

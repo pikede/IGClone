@@ -1,4 +1,4 @@
-package com.example.instagram.my_posts
+package com.example.instagram.single_post
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -13,7 +13,7 @@ import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 
 @Immutable
-data class MyPostsViewState(
+data class SinglePostViewState(
     val inProgress: Boolean = false,
     val user: User? = null,
     val notification: OneTimeEvent<String>? = null,
@@ -21,13 +21,13 @@ data class MyPostsViewState(
     val refreshPostsProgress: Boolean = false,
     val posts: List<PostData> = emptyList(),
     val isSignedIn: Boolean = true,
-    val eventSink: ViewEventSink<MyPostsScreenEvent> = {},
+    val eventSink: ViewEventSink<SinglePostScreenEvent> = {},
 ) {
     companion object {
-        val Empty = MyPostsViewState()
+        val Empty = SinglePostViewState()
 
         @Composable
-        fun preview(): MyPostsViewState {
+        fun preview(): SinglePostViewState {
             var state by remember {
                 mutableStateOf(
                     Empty.copy(
@@ -39,7 +39,7 @@ data class MyPostsViewState(
 
             state = state.copy(eventSink = { event ->
                 when (event) {
-                    MyPostsScreenEvent.ConsumeError -> state = state.copy(error = null)
+                    SinglePostScreenEvent.ConsumeError -> state = state.copy(error = null)
                 }
             })
             return state
@@ -65,6 +65,6 @@ data class PostRow(
     }
 }
 
-sealed interface MyPostsScreenEvent {
-    object ConsumeError : MyPostsScreenEvent
+sealed interface SinglePostScreenEvent {
+    object ConsumeError : SinglePostScreenEvent
 }

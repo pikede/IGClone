@@ -1,5 +1,6 @@
 package com.example.instagram.common.ui.navigation
 
+import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,11 +9,18 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import com.example.instagram.DestinationScreen
 
+data class NavParam(val name: String, val value: Parcelable)
+
 // todo move to core-ui or common-ui module
 fun navigateTo(
     navController: NavController,
     destination: DestinationScreen,
+    vararg params: NavParam,
 ) {
+    for (param in params) {
+        navController.currentBackStackEntry?.arguments?.putParcelable(param.name, param.value)
+    }
+
     navController.navigate(destination.route) {
         popUpTo(destination.route)
         launchSingleTop = true

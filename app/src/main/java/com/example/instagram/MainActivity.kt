@@ -17,9 +17,11 @@ import com.example.instagram.auth.login.LoginRoute
 import com.example.instagram.auth.signup.SignupRoute
 import com.example.instagram.feed.FeedRoute
 import com.example.instagram.feed.SearchRoute
+import com.example.instagram.models.PostData
 import com.example.instagram.my_posts.MyPostsRoute
 import com.example.instagram.new_post.NewPostRoute
 import com.example.instagram.profile.ProfileRoute
+import com.example.instagram.single_post.SinglePostRoute
 import com.example.instagram.ui.theme.InstagramTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,6 +50,7 @@ sealed class DestinationScreen(val route: String) {
     object NewPost : DestinationScreen("newPost/{imageUri}") {
         fun createRoute(uri: String) = "newPost/$uri"
     }
+    object SinglePost : DestinationScreen("singlePost")
 }
 
 // todo move to core-ui module
@@ -80,6 +83,18 @@ fun InstagramApp(
             val imageUri = navBackstackEntry.arguments?.getString("imageUri")
             imageUri?.let {
                 NewPostRoute(navController = navController, encodedUri = it, modifier = modifier)
+            }
+        }
+        composable(DestinationScreen.SinglePost.route) { navBackstackEntry ->
+            // todo find out why postdata is null
+            val postData =
+                navController.previousBackStackEntry?.arguments?.getParcelable<PostData>("post")
+            postData?.let {
+                SinglePostRoute(
+                    navController = navController,
+                    postData = postData,
+                    modifier = modifier
+                )
             }
         }
     }

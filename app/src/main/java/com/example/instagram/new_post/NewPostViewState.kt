@@ -9,7 +9,7 @@ import androidx.compose.runtime.setValue
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
 import com.example.instagram.core_data.Fakes
-import com.example.instagram.entities.User
+import com.example.instagram.models.User
 
 @Immutable
 internal data class NewPostViewState(
@@ -61,16 +61,6 @@ internal data class NewPostViewState(
         eventSink(NewPostScreenEvent.ConsumeError)
     }
 }
-
-data class PostData(
-    val postId: String? = null,
-    val userId: String? = null,
-    val username: String? = null,
-    val userImage: String? = null,
-    val postImage: String? = null,
-    val postDescription: String? = null,
-    val time: Long? = null,
-)
 
 sealed interface NewPostScreenEvent {
     object ConsumeError : NewPostScreenEvent

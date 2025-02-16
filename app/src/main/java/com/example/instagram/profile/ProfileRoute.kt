@@ -34,7 +34,7 @@ import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.FullscreenLoading
-import com.example.instagram.core_ui_components.ImagePlaceHolder
+import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.ProgressSpinner
 
 @Composable
@@ -194,7 +194,7 @@ private fun ProfileImage(
                     .padding(8.dp)
                     .size(100.dp)
             ) {
-                ImagePlaceHolder(data = state.user?.imageUrl)
+                CommonImage(data = state.user?.imageUrl)
             }
             Text(text = "Change profile picture")
         }

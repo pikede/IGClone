@@ -44,11 +44,12 @@ import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
+import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
-import com.example.instagram.core_ui_components.ImagePlaceHolder
+import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.ProgressSpinner
 import com.example.instagram.core_ui_components.UserImageCard
-import com.example.instagram.new_post.PostData
+import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -147,12 +148,14 @@ private fun MyPostsScreen(
                     .weight(1f)
                     .padding(1.dp)
                     .fillMaxSize(),
-                onPostClick = { /*post ->
+                onPostClick = { post ->
                     navigateTo(
                         navController,
                         DestinationScreen.SinglePost,
-                        post.postId*/
-                })
+                        NavParam("post", post)
+                    )
+                }
+            )
         }
         BottomNavigationMenu(selectedItem = BottomNavigationItem.POSTS, navController)
     }
@@ -218,6 +221,7 @@ private fun PostList(
             val rows = arrayListOf<PostRow>()
             var currentRow = PostRow()
             rows.add(currentRow)
+            // todo use chunks/chunkify instead
             for (post in posts) {
                 if (currentRow.isFull()) {
                     currentRow = PostRow()
@@ -272,7 +276,7 @@ fun PostImage(imageUrl: String?, modifier: Modifier = Modifier) {
             modifier = modifier.clickable(enabled = false) {}
         }
 
-        ImagePlaceHolder(
+        CommonImage(
             data = imageUrl,
             contentScale = ContentScale.Crop,
             modifier = modifier,

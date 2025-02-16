@@ -1,4 +1,4 @@
-package com.example.instagram.core_domain
+package com.example.instagram.domain.core_domain
 
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData

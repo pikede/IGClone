@@ -21,7 +21,7 @@ import com.example.instagram.R
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ImagePlaceHolder(
+fun CommonImage(
     data: String?,
     modifier: Modifier = Modifier.wrapContentSize(),
     contentScale: ContentScale = ContentScale.Crop,
@@ -58,7 +58,7 @@ fun UserImageCard(
                 )
             }
 
-            else -> ImagePlaceHolder(data = userImage)
+            else -> CommonImage(data = userImage)
         }
     }
 }
