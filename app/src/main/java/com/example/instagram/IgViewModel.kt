@@ -5,14 +5,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
+import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.POSTS
+import com.example.instagram.common.util.Constants.SEARCH_TERMS
 import com.example.instagram.common.util.Constants.USERNAME
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
+import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -32,6 +37,8 @@ class IgViewModel @Inject constructor(
     private val userState = MutableStateFlow(default.user)
     val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
+    val searchedPosts = MutableStateFlow(default.searchedPosts)
+    val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
 
     internal val state = combine(
         userNameState,
@@ -42,6 +49,8 @@ class IgViewModel @Inject constructor(
         userState,
         notificationState,
         errorState,
+        searchedPosts,
+        searchedPostsProgress,
         eventSink(),
         ::SignupScreenState
     ).stateInDefault(viewModelScope, default)
@@ -165,6 +174,45 @@ class IgViewModel @Inject constructor(
                 errorState.value = it
                 Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
             }
+    }
+
+    fun searchPosts(searchTerm: String) {
+        if (searchTerm.isNotEmpty()) {
+            searchedPostsProgress.value = true
+            db.collection(POSTS)
+                .whereArrayContains(SEARCH_TERMS, searchTerm.trim().lowercase())
+                .get()
+                .addOnSuccessListener {
+                    convertSearchedPosts(it)
+                    searchedPostsProgress.value = false
+                }
+                .addOnFailureListener {
+                    Log.e("*** Cannot search posts", it.localizedMessage.orEmpty())
+                    errorState.value = it
+                    searchedPostsProgress.value = false
+                }
+        }
+    }
+
+    // todo move create Interactor for this
+    private fun convertSearchedPosts(documents: QuerySnapshot) {
+        val newPosts = mutableListOf<PostData>()
+        for (document in documents) {
+            val post = document.toObject(PostData::class.java)
+            newPosts.add(post)
+        }
+        val sortedPosits = newPosts.sortedByDescending { it.time }
+        searchedPosts.value = sortedPosits
+    }
+
+    // todo create interactor for this
+    private fun onLogout() {
+        auth.signOut()
+//        isSignedInState.value = false
+        userState.value = null
+        notificationState.value = OneTimeEvent("Logout")
+        searchedPosts.value =
+            listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
     }
 }
 

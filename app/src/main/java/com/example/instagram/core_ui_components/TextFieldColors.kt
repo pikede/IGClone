@@ -9,11 +9,15 @@ import androidx.compose.ui.graphics.Color
 fun BlackTransparentTextContainer(
     textColor: Color = Color.Black,
     backgroundColor: Color = Color.Transparent,
+    focusedLabelColor: Color = Color.Black,
+    unfocusedLabelColor: Color = Color.Black,
+    disabledIndicatorColor: Color = Color.Black,
 ): TextFieldColors = TextFieldDefaults.colors(
     focusedContainerColor = backgroundColor,
     unfocusedContainerColor = backgroundColor,
     focusedTextColor = textColor,
     unfocusedTextColor = textColor,
     focusedLabelColor = textColor,
-    unfocusedLabelColor = textColor
+    unfocusedLabelColor = textColor,
+    disabledIndicatorColor = textColor
 )

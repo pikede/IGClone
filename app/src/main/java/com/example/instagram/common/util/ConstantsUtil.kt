@@ -1,7 +1,9 @@
 package com.example.instagram.common.util
 
 object Constants {
-    val USERS = "users"
-    val USERNAME = "username"
-    val POSTS = "posts"
+    const val USERS = "users"
+    const val USERNAME = "username"
+    const val POSTS = "posts"
+    const val SEARCH_TERMS = "searchTerms"
+    const val FOLLOWING = "following"
 }

@@ -3,6 +3,7 @@ package com.example.instagram.auth.signup
 import androidx.compose.runtime.Immutable
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
+import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 
 @Immutable
@@ -15,6 +16,8 @@ internal data class SignupScreenState(
     val user: User? = null,
     val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,  // TODO create custom throwable type with it's invokable composable that takes in a custom message
+    val searchedPosts: List<PostData> = listOf(),
+    val searchedPostsProgress: Boolean = false,
     val eventSink: ViewEventSink<SignupScreenEvent> = {},
 ) {
     fun signup() {
