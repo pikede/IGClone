@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.FOLLOWING
 import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
@@ -72,6 +73,7 @@ internal class SinglePostViewModel @Inject constructor(
     private fun eventSink(): ViewEventSinkFlow<SinglePostScreenEvent> = flowOf { event ->
         when (event) {
             SinglePostScreenEvent.ConsumeError -> errorState.value = null
+            is SinglePostScreenEvent.OnFollow -> onFollowClick(event.userId)
         }
     }
 
@@ -104,6 +106,23 @@ internal class SinglePostViewModel @Inject constructor(
         }
         val sortedPosits = newPosts.sortedByDescending { it.time }
         postsState.value = sortedPosits
+    }
+
+    fun onFollowClick(userId: String) {
+        auth.currentUser?.uid?.let { currentUser ->
+            val following = arrayListOf<String>()
+            userState.value?.following?.let {
+                following.addAll(it)
+            }
+            when {
+                following.contains(userId) -> following.remove(userId)
+                else -> following.add(userId)
+            }
+            db.collection(USERS).document(currentUser).update(FOLLOWING, following)
+                .addOnSuccessListener {
+                    getUserData(currentUser)
+                }
+        }
     }
 
     // todo create interactor for this

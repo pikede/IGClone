@@ -100,6 +100,13 @@ internal class NewPostViewModel @Inject constructor(
 
         currentUuid?.let {
             val postUuid = UUID.randomUUID().toString()
+
+            val fillerWords = listOf("the", "be", "to", "is", "of", "and", "or", "a", "in", "it")
+            val searchTerms = descriptionState.value.orEmpty()
+                .split(" ", ".", ",", "?", "!", "#")
+                .map { it.lowercase() }
+                .filter { it.isNotEmpty() && it !in fillerWords }
+
             val post = PostData(
                 postId = postUuid,
                 userId = currentUuid,
@@ -108,7 +115,8 @@ internal class NewPostViewModel @Inject constructor(
                 postImage = imageUri.toString(),
                 postDescription = descriptionState.value,
                 time = System.currentTimeMillis(),
-                likes = listOf()
+                likes = listOf(),
+                searchTerms = searchTerms
             )
             db.collection(POSTS).document(postUuid).set(post)
                 .addOnSuccessListener {

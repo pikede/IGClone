@@ -28,6 +28,8 @@ data class SinglePostViewState(
 
         @Composable
         fun preview(): SinglePostViewState {
+            var error: Throwable? by remember { mutableStateOf(null) }
+
             var state by remember {
                 mutableStateOf(
                     Empty.copy(
@@ -39,11 +41,16 @@ data class SinglePostViewState(
 
             state = state.copy(eventSink = { event ->
                 when (event) {
-                    SinglePostScreenEvent.ConsumeError -> state = state.copy(error = null)
+                    SinglePostScreenEvent.ConsumeError -> error = null
+                    is SinglePostScreenEvent.OnFollow -> {}
                 }
             })
             return state
         }
+    }
+
+    fun onFollow(userId: String) {
+        eventSink(SinglePostScreenEvent.OnFollow(userId))
     }
 
     fun getUserName() = user?.userName?.let { "@$it" }.orEmpty()
@@ -67,4 +74,5 @@ data class PostRow(
 
 sealed interface SinglePostScreenEvent {
     object ConsumeError : SinglePostScreenEvent
+    data class OnFollow(val userId: String) : SinglePostScreenEvent
 }

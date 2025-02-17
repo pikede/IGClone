@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonDivider
@@ -80,16 +80,16 @@ private fun SinglePostScreen(
 
             CommonDivider()
 
-            SinglePostDisplay(state, navController, post)
+            SinglePostDisplay(state, post)
         }
     }
 }
 
 // TODO split into image, likes descriptions, component
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun SinglePostDisplay(
+private fun SinglePostDisplay(
     state: SinglePostViewState,
-    navController: NavController,
     postData: PostData,
     modifier: Modifier = Modifier,
 ) {
@@ -114,10 +114,18 @@ fun SinglePostDisplay(
             Text(text = ".", modifier = Modifier.padding(8.dp))
             if (userData?.userId == postData.userId) {
                 // current userPost. Don't show anything
+            } else if (userData?.following?.contains(postData.userId) == true) {
+                Text(text = "Following",
+                    color = Color.Gray,
+                    modifier = Modifier.clickable {
+                        postData.userId?.let { state.onFollow(it) }
+                    })
             } else {
-                Text(text = "Follow", color = Color.Blue, modifier = Modifier.clickable {
-                    // follow a user
-                })
+                Text(text = "Follow",
+                    color = Color.Blue,
+                    modifier = Modifier.clickable {
+                        postData.userId?.let { state.onFollow(it) }
+                    })
             }
         }
     }
@@ -152,25 +160,6 @@ fun SinglePostDisplay(
     }
     Row(modifier = Modifier.padding(8.dp)) {
         Text(text = "10 Comments", color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
-    }
-}
-
-@Composable
-fun PostImage(imageUrl: String?, modifier: Modifier = Modifier) {
-    Box(modifier = modifier) {
-        var modifier = Modifier
-            .padding(1.dp)
-            .fillMaxSize()
-
-        if (imageUrl == null) {
-            modifier = modifier.clickable(enabled = false) {}
-        }
-
-        CommonImage(
-            data = imageUrl,
-            contentScale = ContentScale.Crop,
-            modifier = modifier,
-        )
     }
 }
 

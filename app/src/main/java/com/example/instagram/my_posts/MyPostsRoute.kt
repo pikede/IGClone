@@ -140,7 +140,6 @@ private fun MyPostsScreen(
                 Text(text = "Edit Profile", color = Color.Black)
             }
             PostList(
-                state = state,
                 isContextLoading = state.inProgress,
                 postsLoading = state.refreshPostsProgress,
                 posts = state.posts,
@@ -198,8 +197,7 @@ private fun ProfileImage(
 }
 
 @Composable
-private fun PostList(
-    state: MyPostsViewState,
+fun PostList(
     isContextLoading: Boolean,
     postsLoading: Boolean,
     posts: List<PostData>,
