@@ -110,10 +110,7 @@ internal class SinglePostViewModel @Inject constructor(
 
     fun onFollowClick(userId: String) {
         auth.currentUser?.uid?.let { currentUser ->
-            val following = arrayListOf<String>()
-            userState.value?.following?.let {
-                following.addAll(it)
-            }
+            val following = userState.value?.following.orEmpty().toMutableList()
             when {
                 following.contains(userId) -> following.remove(userId)
                 else -> following.add(userId)

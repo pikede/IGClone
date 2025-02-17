@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -70,30 +69,6 @@ private fun SearchScreen(
     var searchTerm by rememberSaveable { mutableStateOf("") }
 
     Column(modifier) {
-//         Todo figure out how to use this properly
-        SearchBar(query = searchTerm,
-
-            onQueryChange = { searchTerm = it },
-            onSearch = { vm.searchPosts(searchTerm) },
-            active = true,
-            onActiveChange = {}
-        ) {
-            PostList(
-                isContextLoading = false,
-                postsLoading = state.searchedPostsProgress,
-                posts = state.searchedPosts,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(8.dp),
-            ) { post ->
-                navigateTo(
-                    navController, destination = DestinationScreen.SinglePost,
-                    NavParam(POSTS, post)
-                )
-            }
-        }
-
         SearchBar(
             searchTerm = searchTerm,
             onSearchChange = { searchTerm = it },
