@@ -12,12 +12,16 @@ fun BlackTransparentTextContainer(
     focusedLabelColor: Color = Color.Black,
     unfocusedLabelColor: Color = Color.Black,
     disabledIndicatorColor: Color = Color.Black,
+    focusedIndicatorColor: Color = Color.Transparent,
+    unfocusedIndicatorColor: Color = Color.Transparent,
 ): TextFieldColors = TextFieldDefaults.colors(
     focusedContainerColor = backgroundColor,
     unfocusedContainerColor = backgroundColor,
     focusedTextColor = textColor,
     unfocusedTextColor = textColor,
-    focusedLabelColor = textColor,
-    unfocusedLabelColor = textColor,
-    disabledIndicatorColor = textColor
+    focusedLabelColor = focusedLabelColor,
+    unfocusedLabelColor = unfocusedLabelColor,
+    disabledIndicatorColor = disabledIndicatorColor,
+    focusedIndicatorColor = focusedIndicatorColor,
+    unfocusedIndicatorColor = unfocusedIndicatorColor,
 )

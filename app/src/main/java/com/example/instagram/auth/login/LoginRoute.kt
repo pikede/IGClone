@@ -32,7 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.common.ui.navigation.CheckSignedIn
-import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.ShowErrorModal
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.ui.theme.AppTheme
@@ -128,7 +128,7 @@ private fun LoginScreenContent(
                     }
             )
         }
-        state.inProgress.takeIf { it }?.let { ProgressSpinner() }
+        state.inProgress.takeIf { it }?.let { CommonProgressSpinner() }
     }
 
     state.error?.let { error ->

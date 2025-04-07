@@ -47,7 +47,7 @@ import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.CommonImage
-import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.UserImageCard
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
@@ -160,7 +160,7 @@ private fun MyPostsScreen(
     }
 
     if (state.inProgress) {
-        ProgressSpinner()
+        CommonProgressSpinner()
     }
 }
 
@@ -205,7 +205,7 @@ fun PostList(
     onPostClick: (PostData) -> Unit,
 ) {
     if (postsLoading) {
-        ProgressSpinner()
+        CommonProgressSpinner()
     } else if (posts.isEmpty()) {
         Column(
             modifier = modifier,

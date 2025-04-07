@@ -1,15 +1,46 @@
 package com.example.instagram.feed
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.instagram.DestinationScreen
+import com.example.instagram.IgViewModel
+import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
+import com.example.instagram.common.ui.navigation.NavParam
+import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.core_ui_components.CommonImage
+import com.example.instagram.core_ui_components.CommonProgressSpinner
+import com.example.instagram.core_ui_components.UserImageCard
+import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -21,25 +52,127 @@ fun FeedRoute(navController: NavController, modifier: Modifier = Modifier) {
 private fun Feed(
     navController: NavController,
     modifier: Modifier = Modifier,
-//    vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(), TODO create viewmodel for this
+    viewModel: IgViewModel = hiltViewModel(), // TODO create viewmodel for this
 ) {
-//    val state by vm.state.collectAsStateWithLifecycle() TODO observe state from the viewmodel
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     FeedContent(
-        navController = navController,
-        modifier = modifier
+        state = state,
+        viewModel = viewModel,
+        modifier = modifier,
+        navController = navController
     )
 }
 
 @Composable
 private fun FeedContent(
+    state: SignupScreenState,
     navController: NavController,
     modifier: Modifier = Modifier,
+    viewModel: IgViewModel,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Feed screen")
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(Color.White)
+        ) {
+            UserImageCard(userImage = state.user?.imageUrl)
         }
+
+        PostsList(
+            posts = viewModel.postsFeed.value,
+            modifier = Modifier.weight(1f),
+            isLoading = state.inProgress || viewModel.postsFeedProgress.value, // todo group this in the viewstate
+            navController = navController,
+            viewModel = viewModel,
+            currentUserId = state.user?.userId.orEmpty()
+        )
+
         BottomNavigationMenu(selectedItem = BottomNavigationItem.FEED, navController)
+    }
+}
+
+@Composable
+fun PostsList(
+    posts: List<PostData>,
+    isLoading: Boolean,
+    navController: NavController,
+    viewModel: IgViewModel,
+    currentUserId: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        LazyColumn {
+            items(items = posts) {
+                Post(
+                    post = it,
+                    currentUserId = currentUserId,
+                    viewModel = viewModel,
+                    onPostClick = {
+                        navigateTo(
+                            navController = navController,
+                            destination = DestinationScreen.SinglePost,
+                            NavParam("post", it)
+                        )
+                    }
+                )
+            }
+        }
+        if (isLoading) {
+            CommonProgressSpinner()
+        }
+    }
+}
+
+@Composable
+fun Post(
+    post: PostData,
+    currentUserId: String,
+    viewModel: IgViewModel,
+    onPostClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        shape = RoundedCornerShape(corner = CornerSize(4.dp)),
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(vertical = 4.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Card(
+                    shape = CircleShape, modifier = Modifier
+                        .padding(4.dp)
+                        .size(32.dp)
+                ) {
+                    CommonImage(data = post.userImage, contentScale = ContentScale.Crop)
+                }
+
+                Text(text = post.username.orEmpty(), modifier = Modifier.padding(4.dp))
+            }
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                val postImageModifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 150.dp)
+                CommonImage(
+                    data = post.postImage,
+                    modifier = postImageModifier,
+                    contentScale = ContentScale.FillWidth
+                )
+            }
+        }
     }
 }
 

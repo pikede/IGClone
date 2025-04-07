@@ -105,6 +105,7 @@ fun SearchBar(
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    // todo remove the line under the textfield
     TextField(
         value = searchTerm,
         onValueChange = onSearchChange,
