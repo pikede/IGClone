@@ -9,12 +9,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.auth.login.LoginRoute
 import com.example.instagram.auth.signup.SignupRoute
+import com.example.instagram.comments.CommentsRoute
+import com.example.instagram.common.util.Constants.POST_ID
 import com.example.instagram.feed.FeedRoute
 import com.example.instagram.feed.SearchRoute
 import com.example.instagram.models.PostData
@@ -50,13 +53,18 @@ sealed class DestinationScreen(val route: String) {
     object NewPost : DestinationScreen("newPost/{imageUri}") {
         fun createRoute(uri: String) = "newPost/$uri"
     }
+
     object SinglePost : DestinationScreen("singlePost")
+    object Comments : DestinationScreen("comments/{postId}") {
+        fun createRoute(postId: String) = "comments/$postId"
+    }
 }
 
 // todo move to core-ui module
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
+    viewModel: IgViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
     /// todo check if navcontroller can be without passing to composables
@@ -85,7 +93,7 @@ fun InstagramApp(
                 NewPostRoute(navController = navController, encodedUri = it, modifier = modifier)
             }
         }
-        composable(DestinationScreen.SinglePost.route) { navBackstackEntry ->
+        composable(DestinationScreen.SinglePost.route) {
             // todo find out why postdata is null
             val postData =
                 navController.previousBackStackEntry?.arguments?.getParcelable<PostData>("post")
@@ -93,6 +101,17 @@ fun InstagramApp(
                 SinglePostRoute(
                     navController = navController,
                     postData = postData,
+                    modifier = modifier
+                )
+            }
+        }
+        composable(DestinationScreen.Comments.route) { navBackstackEntry ->
+            val postId = navBackstackEntry.arguments?.getString(POST_ID)
+            postId?.let {
+                CommentsRoute(
+                    navController = navController,
+                    postId = it,
+                    viewModel = viewModel,
                     modifier = modifier
                 )
             }

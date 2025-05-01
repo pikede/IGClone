@@ -1,10 +1,12 @@
 package com.example.instagram.my_posts
 
 import android.util.Log
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.FOLLOWING
 import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
@@ -32,6 +34,7 @@ internal class MyPostsViewModel @Inject constructor(
     private val refreshPostsProgressState = MutableStateFlow(default.refreshPostsProgress)
     private val postsState = MutableStateFlow(default.posts)
     private val isSignedInState = MutableStateFlow(default.isSignedIn)
+    val followers = mutableIntStateOf(0)
 
     val state = combine(
         inProgressState,
@@ -62,6 +65,9 @@ internal class MyPostsViewModel @Inject constructor(
                 userState.value = user
                 inProgressState.value = false
                 refreshPosts()
+                refreshPosts()
+//                getPersonalizedFeed()
+                getFollowers(user?.userId)
             }
             .addOnFailureListener {
                 errorState.value = it
@@ -112,5 +118,13 @@ internal class MyPostsViewModel @Inject constructor(
         isSignedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
+    }
+
+    // todo move to interactor and remove duplicates
+    private fun getFollowers(uid: String?) {
+        db.collection(USERS).whereArrayContains(FOLLOWING, uid.orEmpty()).get()
+            .addOnSuccessListener { document ->
+                followers.value = document.size()
+            }
     }
 }

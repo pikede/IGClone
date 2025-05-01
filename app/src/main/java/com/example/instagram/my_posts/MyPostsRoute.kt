@@ -46,6 +46,7 @@ import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.common.util.Constants.SINGLE_POST
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.UserImageCard
@@ -64,10 +65,12 @@ private fun MyPosts(
     vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(),
 ) { // todo fix sync issue from using not updating and using different viewModels
     val state by vm.state.collectAsStateWithLifecycle()
+    val followers = vm.followers.value
     MyPostsScreen(
         state = state,
         navController = navController,
-        modifier = modifier
+        followers = followers,
+        modifier = modifier,
     )
 
     LaunchedEffect(Unit) {
@@ -79,6 +82,7 @@ private fun MyPosts(
 private fun MyPostsScreen(
     state: MyPostsViewState,
     navController: NavController,
+    followers: Int,
     modifier: Modifier = Modifier,
 ) {
     val newPostImageLauncher =
@@ -98,21 +102,21 @@ private fun MyPostsScreen(
                 })
                 // TODO put texts into lazy row
                 Text(
-                    text = "15\nPosts",
+                    text = "${state.posts.size}\nPosts",
                     modifier = Modifier
                         .weight(1f)
                         .align(Alignment.CenterVertically),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "54\nFollowers",
+                    text = "$followers\nFollowers",
                     modifier = Modifier
                         .weight(1f)
                         .align(Alignment.CenterVertically),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "93\nFollowing",
+                    text = "${state.user?.following?.size ?: 0}\nFollowing",
                     modifier = Modifier
                         .weight(1f)
                         .align(Alignment.CenterVertically),
@@ -151,7 +155,7 @@ private fun MyPostsScreen(
                     navigateTo(
                         navController,
                         DestinationScreen.SinglePost,
-                        NavParam("post", post)
+                        NavParam(SINGLE_POST, post)
                     )
                 }
             )
@@ -170,9 +174,10 @@ private fun ProfileImage(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier
-        .padding(top = 16.dp)
-        .clickable { onClick.invoke() }) {
+    Box(
+        modifier = modifier
+            .padding(top = 16.dp)
+            .clickable { onClick.invoke() }) {
         UserImageCard(
             userImage = imageUrl,
             modifier = Modifier
@@ -285,5 +290,9 @@ fun PostImage(imageUrl: String?, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun MyPostsScreenPreview() = InstagramTheme {
-    MyPostsScreen(state = MyPostsViewState.preview(), navController = rememberNavController())
+    MyPostsScreen(
+        state = MyPostsViewState.preview(),
+        navController = rememberNavController(),
+        followers = 0
+    )
 }

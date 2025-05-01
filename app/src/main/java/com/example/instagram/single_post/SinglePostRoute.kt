@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
+import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.CommonImage
@@ -43,7 +45,11 @@ fun SinglePostRoute(
     postData: PostData,
     modifier: Modifier = Modifier,
 ) {
-    SinglePost(navController = navController, postData = postData, modifier = modifier)
+    SinglePost(
+        navController = navController,
+        postData = postData,
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -53,12 +59,19 @@ private fun SinglePost(
     postData: PostData,
     vm: SinglePostViewModel = hiltViewModel<SinglePostViewModel>(),
 ) { // todo fix sync issue from using not updating and using different viewModels
+
+    val comments = vm.comments.value
+    LaunchedEffect(Unit) {
+        vm.getComments(postData.postId)
+    }
+
     val state by vm.state.collectAsStateWithLifecycle()
     SinglePostScreen(
         state = state,
         post = postData,
         navController = navController,
-        modifier = modifier
+        modifier = modifier,
+        commentsSize = comments.size
     )
 }
 
@@ -68,6 +81,7 @@ private fun SinglePostScreen(
     post: PostData,
     navController: NavController,
     modifier: Modifier = Modifier,
+    commentsSize: Int,
 ) {
     post.userId?.let {
         Column(
@@ -80,7 +94,7 @@ private fun SinglePostScreen(
 
             CommonDivider()
 
-            SinglePostDisplay(state, post)
+            SinglePostDisplay(state, post, navController, commentsSize = commentsSize)
         }
     }
 }
@@ -91,6 +105,8 @@ private fun SinglePostScreen(
 private fun SinglePostDisplay(
     state: SinglePostViewState,
     postData: PostData,
+    navController: NavController,
+    commentsSize: Int,
     modifier: Modifier = Modifier,
 ) {
     val userData = state.user
@@ -115,13 +131,15 @@ private fun SinglePostDisplay(
             if (userData?.userId == postData.userId) {
                 // current userPost. Don't show anything
             } else if (userData?.following?.contains(postData.userId) == true) {
-                Text(text = "Following",
+                Text(
+                    text = "Following",
                     color = Color.Gray,
                     modifier = Modifier.clickable {
                         postData.userId?.let { state.onFollow(it) }
                     })
             } else {
-                Text(text = "Follow",
+                Text(
+                    text = "Follow",
                     color = Color.Blue,
                     modifier = Modifier.clickable {
                         postData.userId?.let { state.onFollow(it) }
@@ -159,7 +177,16 @@ private fun SinglePostDisplay(
         Text(text = postData.postDescription.orEmpty(), modifier = Modifier.padding(8.dp))
     }
     Row(modifier = Modifier.padding(8.dp)) {
-        Text(text = "10 Comments", color = Color.Gray, modifier = Modifier.padding(start = 8.dp))
+        Text(
+            text = "Comments $commentsSize",
+            color = Color.Gray,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .clickable {
+                    postData.postId?.let {
+                        navController.navigate(DestinationScreen.Comments.createRoute(it))
+                    }
+                })
     }
 }
 
@@ -169,6 +196,7 @@ private fun SinglePostScreenPreview() = InstagramTheme {
     SinglePostScreen(
         state = SinglePostViewState.preview(),
         post = PostData(),
-        navController = rememberNavController()
+        navController = rememberNavController(),
+        commentsSize = 0
     )
 }

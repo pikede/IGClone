@@ -36,7 +36,7 @@ import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
-import com.example.instagram.common.util.Constants.POSTS
+import com.example.instagram.common.util.Constants.SINGLE_POST
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.my_posts.PostList
 import com.example.instagram.ui.theme.InstagramTheme
@@ -84,8 +84,9 @@ private fun SearchScreen(
                 .padding(8.dp),
         ) { post ->
             navigateTo(
-                navController, destination = DestinationScreen.SinglePost,
-                NavParam(POSTS, post)
+                navController = navController,
+                destination = DestinationScreen.SinglePost,
+                NavParam(SINGLE_POST, post)
             )
         }
 
