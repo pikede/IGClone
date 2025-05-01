@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 private val LoadingIconSize = 32.dp
 
 @Composable
-fun ProgressSpinner(modifier: Modifier = Modifier) {
+fun CommonProgressSpinner(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .alpha(0.5f)

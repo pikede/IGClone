@@ -36,7 +36,7 @@ fun CheckSignedIn(
 
     if (signedIn && !alreadyLoggedIn) {
         alreadyLoggedIn = true
-        navController.navigate(DestinationScreen.MyPosts.route) {
+        navController.navigate(DestinationScreen.Feed.route) {
             popUpTo(0) // removes all composable when navigating to feed
         }
     }

@@ -63,11 +63,16 @@ internal class SinglePostViewModel @Inject constructor(
                 userState.value = user
                 inProgressState.value = false
                 refreshPosts()
+                getPersonalizedFeed()
             }
             .addOnFailureListener {
                 errorState.value = it
                 Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
             }
+    }
+
+    private fun getPersonalizedFeed() {
+
     }
 
     private fun eventSink(): ViewEventSinkFlow<SinglePostScreenEvent> = flowOf { event ->

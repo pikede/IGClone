@@ -1,6 +1,8 @@
 package com.example.instagram
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.auth.signup.SignupScreenEvent
@@ -35,10 +37,13 @@ class IgViewModel @Inject constructor(
     private val signedInState = MutableStateFlow(default.signedIn)
     private val inProgressState = MutableStateFlow(default.inProgress)
     private val userState = MutableStateFlow(default.user)
-    val notificationState = MutableStateFlow(default.notification)
+    private val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
     val searchedPosts = MutableStateFlow(default.searchedPosts)
     val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
+    val postsFeed = mutableStateOf<List<PostData>>(listOf())
+    val postsFeedProgress = mutableStateOf(false)
+
 
     internal val state = combine(
         userNameState,
@@ -169,11 +174,45 @@ class IgViewModel @Inject constructor(
                 val user = it.toObject(User::class.java)
                 userState.value = user
                 inProgressState.value = false
+                refreshPosts()
+                getPersonalizedFeed()
             }
             .addOnFailureListener {
                 errorState.value = it
                 Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
             }
+    }
+
+    // todo move to interactor and remove duplicates
+    private fun refreshPosts() {
+        val currentUid = auth.currentUser?.uid
+        currentUid?.let {
+            inProgressState.value = true
+            db.collection(POSTS)
+                .whereEqualTo("userId", currentUid).get()
+                .addOnSuccessListener { documents ->
+                    convertPosts(documents)
+                }.addOnFailureListener {
+                    errorState.value = it
+                    notificationState.value = OneTimeEvent("Cannot fetch posts")
+                }
+            inProgressState.value = false
+        } ?: run {
+            onLogout()
+            errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
+        }
+    }
+
+    // todo move to Interactor and remove duplicate for this
+    private fun convertPosts(documents: QuerySnapshot) {
+        /* todo duplicate
+        val newPosts = mutableListOf<PostData>()
+                for (document in documents) {
+                    val post = document.toObject(PostData::class.java)
+                    newPosts.add(post)
+                }
+                val sortedPosits = newPosts.sortedByDescending { it.time }
+                postsState.value = sortedPosits*/
     }
 
     fun searchPosts(searchTerm: String) {
@@ -205,14 +244,90 @@ class IgViewModel @Inject constructor(
         searchedPosts.value = sortedPosits
     }
 
+    // todo move create Interactor for this
+    private fun convertPosts(documents: QuerySnapshot, outState: MutableState<List<PostData>>) {
+        val newPosts = mutableListOf<PostData>()
+        for (document in documents) {
+            val post = document.toObject(PostData::class.java)
+            newPosts.add(post)
+        }
+        val sortedPosits = newPosts.sortedByDescending { it.time }
+        outState.value = sortedPosits
+    }
+
     // todo create interactor for this
     private fun onLogout() {
         auth.signOut()
-//        isSignedInState.value = false
+        signedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
         searchedPosts.value =
             listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
+        postsFeed.value = listOf()
+    }
+
+    private fun getPersonalizedFeed() {
+        val following = userState.value?.following
+        if (!following.isNullOrEmpty()) {
+            postsFeedProgress.value = true
+            db.collection(POSTS).whereIn("userId", following).get()
+                .addOnSuccessListener { documents ->
+                    convertPosts(documents = documents, outState = postsFeed)
+                    if (postsFeed.value.isEmpty()) {
+                        getGeneralFeed()
+                    } else {
+                        postsFeedProgress.value = false
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    errorState.value = exception
+                    notificationState.value = OneTimeEvent("Cannot fetch posts")
+                    postsFeedProgress.value = false
+                }
+
+        } else {
+            getGeneralFeed()
+        }
+    }
+
+    private fun getGeneralFeed() {
+        postsFeedProgress.value = true
+        val currentTime = System.currentTimeMillis()
+        val difference = 24 * 10060 * 60 * 1000 // 1 day in millis
+        val timeAfter = currentTime - difference
+        db.collection(POSTS)
+            .whereGreaterThan("time", timeAfter).get()
+            .addOnSuccessListener {
+                convertPosts(documents = it, outState = postsFeed)
+                postsFeedProgress.value = false
+            }
+            .addOnFailureListener { exc ->
+                errorState.value = exc
+                postsFeedProgress.value = false
+            }
+    }
+
+    fun onLikePost(postData: PostData) {
+        auth.currentUser?.uid?.let { userId ->
+            postData.likes?.let { likes ->
+                val newLikes = arrayListOf<String>()
+                if (likes.contains(userId)) {
+                    newLikes.addAll(likes.filter { userId != it })
+                } else {
+                    newLikes.addAll(likes)
+                    newLikes.add(userId)
+                }
+                postData.postId?.let { postId ->
+                    db.collection(POSTS).document(postId).update("likes", newLikes)
+                        .addOnSuccessListener {
+                            postData.likes = newLikes
+                        }.addOnFailureListener {
+                            errorState.value =
+                                Throwable("Unable to like post ${it.localizedMessage}", it)
+                        }
+                }
+            }
+        }
     }
 }
 

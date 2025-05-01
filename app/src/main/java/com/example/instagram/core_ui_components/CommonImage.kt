@@ -34,7 +34,7 @@ fun CommonImage(
         modifier = modifier,
     )
     if (painter.state is ImagePainter.State.Loading) {
-        ProgressSpinner()
+        CommonProgressSpinner()
     }
 }
 

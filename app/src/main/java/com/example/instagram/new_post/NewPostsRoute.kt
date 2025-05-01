@@ -31,7 +31,7 @@ import com.example.instagram.DestinationScreen
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
-import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.ShowErrorModal
 import com.example.instagram.core_ui_components.ShowEventToast
 import com.example.instagram.ui.theme.InstagramTheme
@@ -117,7 +117,7 @@ private fun NewPostScreen(
         }
     }
     if (state.inProgress) {
-        ProgressSpinner()
+        CommonProgressSpinner()
     }
     if (state.isSignedIn.not()) {
         navigateTo(navController, DestinationScreen.Login)

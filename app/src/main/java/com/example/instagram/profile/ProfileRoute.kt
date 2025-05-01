@@ -35,7 +35,7 @@ import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.FullscreenLoading
 import com.example.instagram.core_ui_components.CommonImage
-import com.example.instagram.core_ui_components.ProgressSpinner
+import com.example.instagram.core_ui_components.CommonProgressSpinner
 
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {
@@ -199,7 +199,7 @@ private fun ProfileImage(
             Text(text = "Change profile picture")
         }
         if (state.inProgress) {
-            ProgressSpinner()
+            CommonProgressSpinner()
         }
     }
 }
