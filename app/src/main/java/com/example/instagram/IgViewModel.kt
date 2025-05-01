@@ -2,6 +2,7 @@ package com.example.instagram
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,12 +10,16 @@ import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.COMMENTS
+import com.example.instagram.common.util.Constants.FOLLOWING
 import com.example.instagram.common.util.Constants.POSTS
+import com.example.instagram.common.util.Constants.POST_ID
 import com.example.instagram.common.util.Constants.SEARCH_TERMS
 import com.example.instagram.common.util.Constants.USERNAME
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
+import com.example.instagram.models.CommentData
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
@@ -23,6 +28,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,7 +49,9 @@ class IgViewModel @Inject constructor(
     val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
     val postsFeed = mutableStateOf<List<PostData>>(listOf())
     val postsFeedProgress = mutableStateOf(false)
-
+    val comments = mutableStateOf<List<CommentData>>(listOf())
+    internal val commentsProgress = mutableStateOf(false)
+    val followers = mutableIntStateOf(0)
 
     internal val state = combine(
         userNameState,
@@ -176,6 +184,7 @@ class IgViewModel @Inject constructor(
                 inProgressState.value = false
                 refreshPosts()
                 getPersonalizedFeed()
+                getFollowers(user?.userId)
             }
             .addOnFailureListener {
                 errorState.value = it
@@ -264,6 +273,7 @@ class IgViewModel @Inject constructor(
         searchedPosts.value =
             listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
         postsFeed.value = listOf()
+        comments.value = listOf()
     }
 
     private fun getPersonalizedFeed() {
@@ -323,11 +333,55 @@ class IgViewModel @Inject constructor(
                             postData.likes = newLikes
                         }.addOnFailureListener {
                             errorState.value =
-                                Throwable("Unable to like post ${it.localizedMessage}", it)
+                                Throwable("Unable to like post", it)
                         }
                 }
             }
         }
+    }
+
+    fun createComment(postId: String, text: String) {
+        userState.value?.userName?.let { userName ->
+            val commentId = UUID.randomUUID().toString()
+            val comment = CommentData(
+                commentId = commentId,
+                postId = postId,
+                userName = userName,
+                text = text,
+                timeStamp = System.currentTimeMillis()
+            )
+            db.collection(COMMENTS).document(commentId).set(comment)
+                .addOnSuccessListener { getComments(postId) }
+                .addOnFailureListener {
+                    errorState.value = Throwable("Cannot Create Comment", it)
+                }
+        }
+    }
+
+    fun getComments(postId: String) {
+        commentsProgress.value = true
+        db.collection(COMMENTS).whereEqualTo(POST_ID, postId).get()
+            .addOnSuccessListener { documents ->
+                val newComments = mutableListOf<CommentData>()
+                documents.forEach { doc ->
+                    val comment = doc.toObject(CommentData::class.java)
+                    newComments.add(comment)
+                }
+                val sortedComments = newComments.sortedByDescending { it.timeStamp }
+                comments.value = sortedComments
+                commentsProgress.value = false
+            }
+            .addOnFailureListener { cause ->
+                errorState.value = Throwable("Cannot retrieve comments", cause)
+                commentsProgress.value = false
+            }
+    }
+
+    private fun getFollowers(uid: String?) {
+        db.collection(USERS).whereArrayContains(FOLLOWING, uid.orEmpty()).get()
+            .addOnSuccessListener { document ->
+                followers.value = document.size()
+            }
     }
 }
 

@@ -43,6 +43,7 @@ import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.common.util.Constants.SINGLE_POST
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.LikeAnimation
@@ -126,7 +127,7 @@ fun PostsList(
                         navigateTo(
                             navController = navController,
                             destination = DestinationScreen.SinglePost,
-                            NavParam("post", it)
+                            NavParam(SINGLE_POST, it)
                         )
                     }
                 )

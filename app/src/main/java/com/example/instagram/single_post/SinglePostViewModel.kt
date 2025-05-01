@@ -1,15 +1,19 @@
 package com.example.instagram.single_post
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.Constants.COMMENTS
 import com.example.instagram.common.util.Constants.FOLLOWING
 import com.example.instagram.common.util.Constants.POSTS
+import com.example.instagram.common.util.Constants.POST_ID
 import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
+import com.example.instagram.models.CommentData
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
@@ -33,6 +37,8 @@ internal class SinglePostViewModel @Inject constructor(
     private val refreshPostsProgressState = MutableStateFlow(default.refreshPostsProgress)
     private val postsState = MutableStateFlow(default.posts)
     private val isSignedInState = MutableStateFlow(default.isSignedIn)
+    val comments = mutableStateOf<List<CommentData>>(listOf())
+    private val commentsProgress = mutableStateOf(false)
 
     val state = combine(
         inProgressState,
@@ -133,5 +139,25 @@ internal class SinglePostViewModel @Inject constructor(
         isSignedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
+    }
+
+    // todo move to interactor and remove duplicate from the IGviewmodel
+    fun getComments(postId: String?) {
+        commentsProgress.value = true
+        db.collection(COMMENTS).whereEqualTo(POST_ID, postId).get()
+            .addOnSuccessListener { documents ->
+                val newComments = mutableListOf<CommentData>()
+                documents.forEach { doc ->
+                    val comment = doc.toObject(CommentData::class.java)
+                    newComments.add(comment)
+                }
+                val sortedComments = newComments.sortedByDescending { it.timeStamp }
+                comments.value = sortedComments
+                commentsProgress.value = false
+            }
+            .addOnFailureListener { cause ->
+                errorState.value = Throwable("Cannot retrieve comments", cause)
+                commentsProgress.value = false
+            }
     }
 }
