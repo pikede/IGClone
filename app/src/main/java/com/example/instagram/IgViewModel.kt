@@ -293,7 +293,7 @@ class IgViewModel @Inject constructor(
     private fun getGeneralFeed() {
         postsFeedProgress.value = true
         val currentTime = System.currentTimeMillis()
-        val difference = 24 * 60 * 60 * 1000 // 1 day in millis
+        val difference = 24 * 10060 * 60 * 1000 // 1 day in millis
         val timeAfter = currentTime - difference
         db.collection(POSTS)
             .whereGreaterThan("time", timeAfter).get()
@@ -305,7 +305,29 @@ class IgViewModel @Inject constructor(
                 errorState.value = exc
                 postsFeedProgress.value = false
             }
+    }
 
+    fun onLikePost(postData: PostData) {
+        auth.currentUser?.uid?.let { userId ->
+            postData.likes?.let { likes ->
+                val newLikes = arrayListOf<String>()
+                if (likes.contains(userId)) {
+                    newLikes.addAll(likes.filter { userId != it })
+                } else {
+                    newLikes.addAll(likes)
+                    newLikes.add(userId)
+                }
+                postData.postId?.let { postId ->
+                    db.collection(POSTS).document(postId).update("likes", newLikes)
+                        .addOnSuccessListener {
+                            postData.likes = newLikes
+                        }.addOnFailureListener {
+                            errorState.value =
+                                Throwable("Unable to like post ${it.localizedMessage}", it)
+                        }
+                }
+            }
+        }
     }
 }
 

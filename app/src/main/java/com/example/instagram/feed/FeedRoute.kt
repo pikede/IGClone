@@ -1,6 +1,7 @@
 package com.example.instagram.feed
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,10 +20,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,9 +45,11 @@ import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
+import com.example.instagram.core_ui_components.LikeAnimation
 import com.example.instagram.core_ui_components.UserImageCard
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun FeedRoute(navController: NavController, modifier: Modifier = Modifier) {
@@ -111,7 +119,7 @@ fun PostsList(
         LazyColumn {
             items(items = posts) {
                 Post(
-                    post = it,
+                    postData = it,
                     currentUserId = currentUserId,
                     viewModel = viewModel,
                     onPostClick = {
@@ -132,12 +140,15 @@ fun PostsList(
 
 @Composable
 fun Post(
-    post: PostData,
+    postData: PostData,
     currentUserId: String,
     viewModel: IgViewModel,
     onPostClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isLikeAnimation by remember { mutableStateOf(false) }
+    var isDisLikeAnimation by remember { mutableStateOf(false) }
+
     Card(
         shape = RoundedCornerShape(corner = CornerSize(4.dp)),
         modifier = modifier
@@ -157,23 +168,60 @@ fun Post(
                         .padding(4.dp)
                         .size(32.dp)
                 ) {
-                    CommonImage(data = post.userImage, contentScale = ContentScale.Crop)
+                    CommonImage(data = postData.userImage, contentScale = ContentScale.Crop)
                 }
 
-                Text(text = post.username.orEmpty(), modifier = Modifier.padding(4.dp))
+                Text(text = postData.username.orEmpty(), modifier = Modifier.padding(4.dp))
             }
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val postImageModifier = Modifier
                     .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                if (postData.likes?.contains(currentUserId) == true) {
+                                    isDisLikeAnimation = true
+                                } else {
+                                    isLikeAnimation = true
+                                }
+                                viewModel.onLikePost(postData)
+                            },
+                            onTap = { onPostClick.invoke() }
+                        )
+                    }
                     .defaultMinSize(minHeight = 150.dp)
                 CommonImage(
-                    data = post.postImage,
+                    data = postData.postImage,
                     modifier = postImageModifier,
                     contentScale = ContentScale.FillWidth
+                )
+
+                // todo fix animation not showing
+                HandeLikeDislikeAnimation(
+                    isLikeAnimation = isLikeAnimation,
+                    isDisLikeAnimation = isDisLikeAnimation,
+                    onAnimationEnd = {
+                        isDisLikeAnimation = false
+                        isLikeAnimation = false
+                    }
                 )
             }
         }
     }
+}
+
+@Composable
+private fun HandeLikeDislikeAnimation(
+    isLikeAnimation: Boolean,
+    isDisLikeAnimation: Boolean,
+    onAnimationEnd: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LaunchedEffect(isLikeAnimation, isDisLikeAnimation) {
+        delay(2000L)
+        onAnimationEnd()
+    }
+    LikeAnimation(isLike = isLikeAnimation, modifier = modifier)
 }
 
 @Preview(showBackground = true)
