@@ -2,8 +2,11 @@ package com.example.instagram.single_post
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.example.instagram.DestinationScreen
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
 import com.example.instagram.common.util.Constants.COMMENTS
@@ -18,7 +21,6 @@ import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -26,16 +28,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SinglePostViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val db: FirebaseFirestore,
+    private val savedStateHandle: SavedStateHandle,
+    private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore,
 ) : ViewModel() {
+    private val postId = savedStateHandle.toRoute<DestinationScreen.SinglePost>().postId.orEmpty()
+    val temp = savedStateHandle.getStateFlow("postId", "")
+
     private val default = SinglePostViewState.Companion.Empty
     private val inProgressState = MutableStateFlow(default.inProgress)
     private val userState = MutableStateFlow(default.user)
     val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
     private val refreshPostsProgressState = MutableStateFlow(default.refreshPostsProgress)
-    private val postsState = MutableStateFlow(default.posts)
+    private val postsState = MutableStateFlow(default.postData)
     private val isSignedInState = MutableStateFlow(default.isSignedIn)
     val comments = mutableStateOf<List<CommentData>>(listOf())
     private val commentsProgress = mutableStateOf(false)
@@ -53,6 +59,7 @@ internal class SinglePostViewModel @Inject constructor(
     ).stateInDefault(viewModelScope, default)
 
     init {
+        println(temp.value)// todo remove this
         val currentUser = auth.currentUser
         currentUser?.uid?.let { userId ->
             getUserData(userId) // todo cash getUserData after getting with interactor value
@@ -67,18 +74,31 @@ internal class SinglePostViewModel @Inject constructor(
             .addOnSuccessListener {
                 val user = it.toObject(User::class.java)
                 userState.value = user
+                getPostData()
                 inProgressState.value = false
-                refreshPosts()
-                getPersonalizedFeed()
             }
             .addOnFailureListener {
                 errorState.value = it
+                onLogout()
                 Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
             }
     }
 
-    private fun getPersonalizedFeed() {
 
+    private fun getPostData() {
+        if (postId.isEmpty()) {
+            return
+        }
+        inProgressState.value = true
+        db.collection(POSTS).whereEqualTo(POST_ID, postId).get()
+            .addOnSuccessListener { postDocument ->
+                postsState.value = postDocument.first().toObject(PostData::class.java)
+                inProgressState.value = false
+            }
+            .addOnFailureListener {
+                errorState.value = Throwable("Unable to load post", it)
+                inProgressState.value = false
+            }
     }
 
     private fun eventSink(): ViewEventSinkFlow<SinglePostScreenEvent> = flowOf { event ->
@@ -86,37 +106,6 @@ internal class SinglePostViewModel @Inject constructor(
             SinglePostScreenEvent.ConsumeError -> errorState.value = null
             is SinglePostScreenEvent.OnFollow -> onFollowClick(event.userId)
         }
-    }
-
-    // todo move to Interactor
-    internal fun refreshPosts() {
-        val currentUid = auth.currentUser?.uid
-        currentUid?.let {
-            refreshPostsProgressState.value = true
-            db.collection(POSTS)
-                .whereEqualTo("userId", currentUid).get()
-                .addOnSuccessListener { documents ->
-                    convertPosts(documents)
-                }.addOnFailureListener {
-                    errorState.value = it
-                    notificationState.value = OneTimeEvent("Cannot fetch posts")
-                }
-            refreshPostsProgressState.value = false
-        } ?: run {
-            onLogout()
-            errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
-        }
-    }
-
-    // todo move create Interactor for this
-    private fun convertPosts(documents: QuerySnapshot) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        postsState.value = sortedPosits
     }
 
     fun onFollowClick(userId: String) {
@@ -142,7 +131,7 @@ internal class SinglePostViewModel @Inject constructor(
     }
 
     // todo move to interactor and remove duplicate from the IGviewmodel
-    fun getComments(postId: String?) {
+    fun getComments() {
         commentsProgress.value = true
         db.collection(COMMENTS).whereEqualTo(POST_ID, postId).get()
             .addOnSuccessListener { documents ->

@@ -1,6 +1,5 @@
 package com.example.instagram.my_posts
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -44,9 +43,8 @@ import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
-import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
-import com.example.instagram.common.util.Constants.SINGLE_POST
+import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.UserImageCard
@@ -65,7 +63,7 @@ private fun MyPosts(
     vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(),
 ) { // todo fix sync issue from using not updating and using different viewModels
     val state by vm.state.collectAsStateWithLifecycle()
-    val followers = vm.followers.value
+    val followers = vm.followers.intValue
     MyPostsScreen(
         state = state,
         navController = navController,
@@ -88,8 +86,7 @@ private fun MyPostsScreen(
     val newPostImageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             uri?.let {
-                val encoded = Uri.encode(it.toString())
-                val route = DestinationScreen.NewPost.createRoute(encoded)
+                val route = DestinationScreen.NewPost(it.toString())
                 navController.navigate(route)
             }
         }
@@ -97,10 +94,8 @@ private fun MyPostsScreen(
         Column(modifier = Modifier.weight(1f)) {
             Row {
                 ProfileImage(imageUrl = state.user?.imageUrl, onClick = {
-                    // todo extract "image/* to constant
-                    newPostImageLauncher.launch("image/*") // check for any type of image on the device
+                    newPostImageLauncher.launch(IMAGE_URI) // checks for any type of image on the device
                 })
-                // TODO put texts into lazy row
                 Text(
                     text = "${state.posts.size}\nPosts",
                     modifier = Modifier
@@ -133,7 +128,7 @@ private fun MyPostsScreen(
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(Color.Transparent), // todo set as backgroundColor
+                colors = ButtonDefaults.buttonColors(Color.Transparent),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 0.dp,
                     pressedElevation = 0.dp,
@@ -154,8 +149,7 @@ private fun MyPostsScreen(
                 onPostClick = { post ->
                     navigateTo(
                         navController,
-                        DestinationScreen.SinglePost,
-                        NavParam(SINGLE_POST, post)
+                        DestinationScreen.SinglePost(post.postId)
                     )
                 }
             )
@@ -224,7 +218,6 @@ fun PostList(
             val rows = arrayListOf<PostRow>()
             var currentRow = PostRow()
             rows.add(currentRow)
-            // todo use chunks/chunkify instead
             for (post in posts) {
                 if (currentRow.isFull()) {
                     currentRow = PostRow()

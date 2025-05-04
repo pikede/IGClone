@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
+    id("kotlinx-serialization")
 }
 
 android {
@@ -82,4 +83,6 @@ dependencies {
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.storage.ktx)
+
+    implementation(libs.kotlinx.serialization.json)
 }
