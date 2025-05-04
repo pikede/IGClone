@@ -9,4 +9,5 @@ object Constants {
     const val FOLLOWING = "following"
     const val COMMENTS = "comments"
     const val POST_ID = "postId"
+    const val IMAGE_URI = "image/*"
 }

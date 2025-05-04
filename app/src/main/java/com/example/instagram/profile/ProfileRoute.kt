@@ -31,11 +31,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
-import com.example.instagram.core_ui_components.FullscreenLoading
 import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
+import com.example.instagram.core_ui_components.FullscreenLoading
 
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {
@@ -185,7 +186,7 @@ private fun ProfileImage(
             modifier = Modifier
                 .padding(8.dp)
                 .fillMaxWidth()
-                .clickable { launcher.launch("image/*") },
+                .clickable { launcher.launch(IMAGE_URI) },
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
