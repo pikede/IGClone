@@ -19,7 +19,7 @@ data class SinglePostViewState(
     val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,
     val refreshPostsProgress: Boolean = false,
-    val posts: List<PostData> = emptyList(),
+    val postData: PostData? = null,
     val isSignedIn: Boolean = true,
     val eventSink: ViewEventSink<SinglePostScreenEvent> = {},
 ) {

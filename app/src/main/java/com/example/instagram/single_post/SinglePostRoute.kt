@@ -36,18 +36,16 @@ import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonDivider
 import com.example.instagram.core_ui_components.CommonImage
-import com.example.instagram.models.PostData
+import com.example.instagram.core_ui_components.ShowErrorModal
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
 fun SinglePostRoute(
     navController: NavController,
-    postData: PostData,
     modifier: Modifier = Modifier,
 ) {
     SinglePost(
         navController = navController,
-        postData = postData,
         modifier = modifier
     )
 }
@@ -56,19 +54,17 @@ fun SinglePostRoute(
 private fun SinglePost(
     navController: NavController,
     modifier: Modifier = Modifier,
-    postData: PostData,
     vm: SinglePostViewModel = hiltViewModel<SinglePostViewModel>(),
 ) { // todo fix sync issue from using not updating and using different viewModels
+    val state by vm.state.collectAsStateWithLifecycle()
 
     val comments = vm.comments.value
     LaunchedEffect(Unit) {
-        vm.getComments(postData.postId)
+        vm.getComments()
     }
 
-    val state by vm.state.collectAsStateWithLifecycle()
     SinglePostScreen(
         state = state,
-        post = postData,
         navController = navController,
         modifier = modifier,
         commentsSize = comments.size
@@ -78,24 +74,27 @@ private fun SinglePost(
 @Composable
 private fun SinglePostScreen(
     state: SinglePostViewState,
-    post: PostData,
     navController: NavController,
     modifier: Modifier = Modifier,
     commentsSize: Int,
 ) {
-    post.userId?.let {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(8.dp)
-        ) {
-            Text(text = "Back", modifier = Modifier.clickable { navController.popBackStack() })
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .padding(8.dp)
+    ) {
+        Text(text = "Back", modifier = Modifier.clickable { navController.popBackStack() })
 
-            CommonDivider()
+        CommonDivider()
 
-            SinglePostDisplay(state, post, navController, commentsSize = commentsSize)
-        }
+        SinglePostDisplay(state, navController, commentsSize = commentsSize)
+    }
+
+    state.error?.let { error ->
+        ShowErrorModal(
+            error = error,
+            onDismiss = { state.eventSink(SinglePostScreenEvent.ConsumeError) })
     }
 }
 
@@ -104,7 +103,6 @@ private fun SinglePostScreen(
 @Composable
 private fun SinglePostDisplay(
     state: SinglePostViewState,
-    postData: PostData,
     navController: NavController,
     commentsSize: Int,
     modifier: Modifier = Modifier,
@@ -126,23 +124,23 @@ private fun SinglePostDisplay(
                     contentDescription = null
                 )
             }
-            Text(text = postData.username.orEmpty())
+            Text(text = state.postData?.username.orEmpty())
             Text(text = ".", modifier = Modifier.padding(8.dp))
-            if (userData?.userId == postData.userId) {
+            if (userData?.userId == state.postData?.userId) {
                 // current userPost. Don't show anything
-            } else if (userData?.following?.contains(postData.userId) == true) {
+            } else if (userData?.following?.contains(state.postData?.userId) == true) {
                 Text(
                     text = "Following",
                     color = Color.Gray,
                     modifier = Modifier.clickable {
-                        postData.userId?.let { state.onFollow(it) }
+                        state.postData?.userId?.let { state.onFollow(it) }
                     })
             } else {
                 Text(
                     text = "Follow",
                     color = Color.Blue,
                     modifier = Modifier.clickable {
-                        postData.userId?.let { state.onFollow(it) }
+                        state.postData?.userId?.let { state.onFollow(it) }
                     })
             }
         }
@@ -152,7 +150,7 @@ private fun SinglePostDisplay(
             .fillMaxWidth()
             .defaultMinSize(minHeight = 150.dp)
         CommonImage(
-            data = postData.postImage,
+            data = state.postData?.postImage,
             modifier = modifier,
             contentScale = ContentScale.FillWidth
         )
@@ -168,13 +166,13 @@ private fun SinglePostDisplay(
             colorFilter = ColorFilter.tint(Color.Red)
         )
         Text(
-            text = " ${postData.likes?.size ?: 0} likes",
+            text = " ${state.postData?.likes?.size ?: 0} likes",
             modifier = Modifier.padding(start = 8.dp)
         )
     }
     Row(modifier = Modifier.padding(8.dp)) {
-        Text(text = postData.username.orEmpty(), fontWeight = FontWeight.Bold)
-        Text(text = postData.postDescription.orEmpty(), modifier = Modifier.padding(8.dp))
+        Text(text = state.postData?.username.orEmpty(), fontWeight = FontWeight.Bold)
+        Text(text = state.postData?.postDescription.orEmpty(), modifier = Modifier.padding(8.dp))
     }
     Row(modifier = Modifier.padding(8.dp)) {
         Text(
@@ -183,8 +181,8 @@ private fun SinglePostDisplay(
             modifier = Modifier
                 .padding(start = 8.dp)
                 .clickable {
-                    postData.postId?.let {
-                        navController.navigate(DestinationScreen.Comments.createRoute(it))
+                    state.postData?.postId?.let {
+                        navController.navigate(DestinationScreen.Comments(it))
                     }
                 })
     }
@@ -195,7 +193,6 @@ private fun SinglePostDisplay(
 private fun SinglePostScreenPreview() = InstagramTheme {
     SinglePostScreen(
         state = SinglePostViewState.preview(),
-        post = PostData(),
         navController = rememberNavController(),
         commentsSize = 0
     )

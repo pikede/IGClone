@@ -34,9 +34,7 @@ import com.example.instagram.IgViewModel
 import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
-import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
-import com.example.instagram.common.util.Constants.SINGLE_POST
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.my_posts.PostList
 import com.example.instagram.ui.theme.InstagramTheme
@@ -51,8 +49,8 @@ fun SearchRoute(navController: NavController, modifier: Modifier = Modifier) {
 @Composable
 private fun SearchScreen(
     navController: NavController,
-    viewModel: IgViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
+    viewModel: IgViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     SearchScreen(modifier, viewModel, state, navController)
@@ -85,8 +83,7 @@ private fun SearchScreen(
         ) { post ->
             navigateTo(
                 navController = navController,
-                destination = DestinationScreen.SinglePost,
-                NavParam(SINGLE_POST, post)
+                destination = DestinationScreen.SinglePost(post.postId)
             )
         }
 

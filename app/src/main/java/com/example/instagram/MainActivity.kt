@@ -14,19 +14,20 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.instagram.auth.login.LoginRoute
 import com.example.instagram.auth.signup.SignupRoute
 import com.example.instagram.comments.CommentsRoute
 import com.example.instagram.common.util.Constants.POST_ID
 import com.example.instagram.feed.FeedRoute
 import com.example.instagram.feed.SearchRoute
-import com.example.instagram.models.PostData
 import com.example.instagram.my_posts.MyPostsRoute
 import com.example.instagram.new_post.NewPostRoute
 import com.example.instagram.profile.ProfileRoute
 import com.example.instagram.single_post.SinglePostRoute
 import com.example.instagram.ui.theme.InstagramTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.serialization.Serializable
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -42,70 +43,71 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// todo move to core-ui module
-sealed class DestinationScreen(val route: String) {
-    object Signup : DestinationScreen("signup")
-    object Login : DestinationScreen("login")
-    object Feed : DestinationScreen("feed")
-    object Search : DestinationScreen("search")
-    object MyPosts : DestinationScreen("myPosts")
-    object Profile : DestinationScreen("profile")
-    object NewPost : DestinationScreen("newPost/{imageUri}") {
-        fun createRoute(uri: String) = "newPost/$uri"
-    }
+sealed interface DestinationScreen {
+    @Serializable
+    object Signup : DestinationScreen
 
-    object SinglePost : DestinationScreen("singlePost")
-    object Comments : DestinationScreen("comments/{postId}") {
-        fun createRoute(postId: String) = "comments/$postId"
-    }
+    @Serializable
+    object Login : DestinationScreen
+
+    @Serializable
+    object Feed : DestinationScreen
+
+    @Serializable
+    object Search : DestinationScreen
+
+    @Serializable
+    object MyPosts : DestinationScreen
+
+    @Serializable
+    object Profile : DestinationScreen
+
+    @Serializable
+    data class NewPost(val imageUri: String) : DestinationScreen
+
+    @Serializable
+    data class SinglePost(val postId: String?) : DestinationScreen
+
+    @Serializable
+    data class Comments(val postId: String) : DestinationScreen
 }
 
-// todo move to core-ui module
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
     viewModel: IgViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
-    /// todo check if navcontroller can be without passing to composables
-    NavHost(navController = navController, startDestination = DestinationScreen.Signup.route) {
-        composable(DestinationScreen.Signup.route) {
+    NavHost(navController = navController, startDestination = DestinationScreen.Signup) {
+        composable<DestinationScreen.Signup> {
             SignupRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.Login.route) {
+        composable<DestinationScreen.Login> {
             LoginRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.Feed.route) {
+        composable<DestinationScreen.Feed> {
             FeedRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.Search.route) {
+        composable<DestinationScreen.Search> {
             SearchRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.MyPosts.route) {
+        composable<DestinationScreen.MyPosts> {
             MyPostsRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.Profile.route) {
+        composable<DestinationScreen.Profile> {
             ProfileRoute(navController = navController, modifier = modifier)
         }
-        composable(DestinationScreen.NewPost.route) { navBackstackEntry ->
-            val imageUri = navBackstackEntry.arguments?.getString("imageUri")
-            imageUri?.let {
-                NewPostRoute(navController = navController, encodedUri = it, modifier = modifier)
-            }
+        composable<DestinationScreen.NewPost> { navBackstackEntry ->
+            val imageUri = navBackstackEntry.toRoute<DestinationScreen.NewPost>().imageUri
+            NewPostRoute(navController = navController, encodedUri = imageUri, modifier = modifier)
         }
-        composable(DestinationScreen.SinglePost.route) {
-            // todo find out why postdata is null
-            val postData =
-                navController.previousBackStackEntry?.arguments?.getParcelable<PostData>("post")
-            postData?.let {
-                SinglePostRoute(
-                    navController = navController,
-                    postData = postData,
-                    modifier = modifier
-                )
-            }
+        composable<DestinationScreen.SinglePost> { navBackStackEntry ->
+            SinglePostRoute(
+                navController = navController,
+                modifier = modifier
+            )
         }
-        composable(DestinationScreen.Comments.route) { navBackstackEntry ->
+        composable<DestinationScreen.Comments> { navBackstackEntry ->
             val postId = navBackstackEntry.arguments?.getString(POST_ID)
             postId?.let {
                 CommentsRoute(

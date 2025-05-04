@@ -21,8 +21,8 @@ fun navigateTo(
         navController.currentBackStackEntry?.arguments?.putParcelable(param.name, param.value)
     }
 
-    navController.navigate(destination.route) {
-        popUpTo(destination.route)
+    navController.navigate(destination) {
+        popUpTo(destination)
         launchSingleTop = true
     }
 }
@@ -36,7 +36,7 @@ fun CheckSignedIn(
 
     if (signedIn && !alreadyLoggedIn) {
         alreadyLoggedIn = true
-        navController.navigate(DestinationScreen.Feed.route) {
+        navController.navigate(DestinationScreen.Feed) {
             popUpTo(0) // removes all composable when navigating to feed
         }
     }

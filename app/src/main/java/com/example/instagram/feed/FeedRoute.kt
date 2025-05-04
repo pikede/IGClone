@@ -126,7 +126,7 @@ fun PostsList(
                     onPostClick = {
                         navigateTo(
                             navController = navController,
-                            destination = DestinationScreen.SinglePost,
+                            destination = DestinationScreen.SinglePost(it.postId),
                             NavParam(SINGLE_POST, it)
                         )
                     }
