@@ -7,7 +7,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class CreateComment @Inject constructor(private val db: FirebaseFirestore) : Interactor<CommentData, Unit>() {
+class CreateComment @Inject constructor(private val db: FirebaseFirestore) :
+    Interactor<CommentData, Unit>() {
 
     override suspend fun doWork(params: CommentData) {
         db.collection(COMMENTS).document(params.commentId.orEmpty())

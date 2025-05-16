@@ -15,6 +15,7 @@ class GetComments @Inject constructor(private val db: FirebaseFirestore) :
         val documents = db.collection(COMMENTS).whereEqualTo(POST_ID, params).get()
             .await()
             .documents
+
         val comments = documents.mapNotNull { it.toObject(CommentData::class.java) }
         return comments.sortedByDescending { it.timeStamp }
     }

@@ -111,9 +111,7 @@ fun InstagramApp(
             val postId = navBackstackEntry.arguments?.getString(POST_ID)
             postId?.let {
                 CommentsRoute(
-                    navController = navController,
                     postId = it,
-                    viewModel = viewModel,
                     modifier = modifier
                 )
             }

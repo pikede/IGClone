@@ -1,7 +1,6 @@
 package com.example.instagram
 
 import android.util.Log
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,17 +14,12 @@ import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.domain.InvalidUserException
 import com.example.instagram.domain.UserCreationFailedException
-import com.example.instagram.domain.interactors.CreateComment
 import com.example.instagram.domain.interactors.CreateOrUpdateProfile
 import com.example.instagram.domain.interactors.CreateUser
-import com.example.instagram.domain.interactors.GetComments
-import com.example.instagram.domain.interactors.GetFollowers
 import com.example.instagram.domain.interactors.GetGeneralFeed
 import com.example.instagram.domain.interactors.GetPersonalizedFeed
 import com.example.instagram.domain.interactors.GetUser
-import com.example.instagram.domain.interactors.RefreshUserPosts
 import com.example.instagram.domain.interactors.SignUp
-import com.example.instagram.models.CommentData
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
@@ -35,7 +29,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,12 +39,8 @@ class IgViewModel @Inject constructor(
     private val signUp: SignUp,
     private val createOrUpdateProfile: CreateOrUpdateProfile,
     private val createUser: CreateUser,
-    private val getFollowers: GetFollowers,
-    private val createComment: CreateComment,
-    private val getComments: GetComments,
     private val getGeneralFeed: GetGeneralFeed,
     private val getPersonalizedFeed: GetPersonalizedFeed,
-    private val refreshUserPosts: RefreshUserPosts,
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -66,9 +55,6 @@ class IgViewModel @Inject constructor(
     val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
     val userFeed = mutableStateOf<List<PostData>>(listOf())
     val isFeedInProgress = mutableStateOf(false)
-    val comments = mutableStateOf<List<CommentData>>(listOf())
-    internal val commentsProgress = mutableStateOf(false)
-    val followers = mutableIntStateOf(0)
 
     internal val state = combine(
         userNameState,
@@ -98,7 +84,6 @@ class IgViewModel @Inject constructor(
                 userState.value = user
                 inProgressState.value = false
                 getPersonalizedFeed()
-                getFollowers()
             }
             .onFailure {
                 errorState.value = it
@@ -236,7 +221,7 @@ class IgViewModel @Inject constructor(
         searchedPosts.value =
             listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
         userFeed.value = listOf()
-        comments.value = listOf()
+//        comments.value = listOf() todo clear all of these on logout
     }
 
     private suspend fun getPersonalizedFeed() {
@@ -297,39 +282,6 @@ class IgViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun createComment(postId: String, text: String) = viewModelScope.launch {
-        userState.value?.userName?.let { userName ->
-            val commentId = UUID.randomUUID().toString()
-            val comment = CommentData(
-                commentId = commentId,
-                postId = postId,
-                userName = userName,
-                text = text,
-                timeStamp = System.currentTimeMillis()
-            )
-            createComment.getResult(comment)
-                .onSuccess { getComments(postId) }
-                .onFailure { errorState.value = Throwable("Cannot Create Comment", it) }
-        }
-    }
-
-    suspend fun getComments(postId: String) {
-        commentsProgress.value = true
-        getComments.getResult(postId).onSuccess { sortedComments ->
-            comments.value = sortedComments
-            commentsProgress.value = false
-        }.onFailure {
-            errorState.value = Throwable("Cannot retrieve comments", it)
-            commentsProgress.value = false
-        }
-    }
-
-    private fun getFollowers() = viewModelScope.launch {
-        getFollowers.getResult()
-            .onSuccess { followers.intValue = it }
-            .onFailure { errorState.value = it }
     }
 }
 
