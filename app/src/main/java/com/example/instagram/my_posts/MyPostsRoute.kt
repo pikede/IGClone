@@ -61,7 +61,7 @@ private fun MyPosts(
     navController: NavController,
     modifier: Modifier = Modifier,
     vm: MyPostsViewModel = hiltViewModel<MyPostsViewModel>(),
-) { // todo fix sync issue from using not updating and using different viewModels
+) {
     val state by vm.state.collectAsStateWithLifecycle()
     val followers = vm.followers.intValue
     MyPostsScreen(

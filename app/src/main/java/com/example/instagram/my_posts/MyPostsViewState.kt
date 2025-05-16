@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
 import com.example.instagram.core_data.Fakes
 import com.example.instagram.models.PostData
@@ -16,11 +15,9 @@ import com.example.instagram.models.User
 data class MyPostsViewState(
     val inProgress: Boolean = false,
     val user: User? = null,
-    val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,
     val refreshPostsProgress: Boolean = false,
     val posts: List<PostData> = emptyList(),
-    val isSignedIn: Boolean = true,
     val eventSink: ViewEventSink<MyPostsScreenEvent> = {},
 ) {
     companion object {

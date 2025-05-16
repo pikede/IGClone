@@ -95,9 +95,9 @@ private fun FeedContent(
         }
 
         PostsList(
-            posts = viewModel.postsFeed.value,
+            posts = viewModel.userFeed.value,
             modifier = Modifier.weight(1f),
-            isLoading = state.inProgress || viewModel.postsFeedProgress.value, // todo group this in the viewstate
+            isLoading = state.inProgress || viewModel.isFeedInProgress.value, // todo group this in the viewstate
             navController = navController,
             viewModel = viewModel,
             currentUserId = state.user?.userId.orEmpty()
