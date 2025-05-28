@@ -2,7 +2,6 @@ package com.example.instagram.new_post
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -11,13 +10,13 @@ import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
 import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.USERS
+import com.example.instagram.common.util.convertPosts
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -177,7 +176,7 @@ internal class NewPostViewModel @Inject constructor(
             db.collection(POSTS)
                 .whereEqualTo("userId", currentUid).get()
                 .addOnSuccessListener { documents ->
-                    convertPosts(documents, postsState)
+                    postsState.value = convertPosts(documents)
                 }.addOnFailureListener {
                     errorState.value = it
                     notificationState.value = OneTimeEvent("Cannot fetch posts")
@@ -187,16 +186,5 @@ internal class NewPostViewModel @Inject constructor(
             onLogout()
             errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
         }
-    }
-
-    // todo move create Interactor for this
-    private fun convertPosts(documents: QuerySnapshot, outState: MutableState<List<PostData>>) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        outState.value = sortedPosits
     }
 }

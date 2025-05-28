@@ -8,8 +8,6 @@ import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
-import com.example.instagram.common.util.Constants.POSTS
-import com.example.instagram.common.util.Constants.SEARCH_TERMS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.domain.InvalidUserException
@@ -19,11 +17,12 @@ import com.example.instagram.domain.interactors.CreateUser
 import com.example.instagram.domain.interactors.GetGeneralFeed
 import com.example.instagram.domain.interactors.GetPersonalizedFeed
 import com.example.instagram.domain.interactors.GetUser
+import com.example.instagram.domain.interactors.LikePost
+import com.example.instagram.domain.interactors.SearchPosts
+import com.example.instagram.domain.interactors.SignOut
 import com.example.instagram.domain.interactors.SignUp
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,14 +32,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IgViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val db: FirebaseFirestore,
     private val getUser: GetUser,
     private val signUp: SignUp,
+    private val signOut: SignOut,
     private val createOrUpdateProfile: CreateOrUpdateProfile,
     private val createUser: CreateUser,
     private val getGeneralFeed: GetGeneralFeed,
     private val getPersonalizedFeed: GetPersonalizedFeed,
+    private val likePost: LikePost,
+    private val searchPosts: SearchPosts
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -183,17 +183,14 @@ class IgViewModel @Inject constructor(
         )
     }
 
-    fun searchPosts(searchTerm: String) {
+    fun searchPosts(searchTerm: String) = viewModelScope.launch {
         if (searchTerm.isNotEmpty()) {
-            searchedPostsProgress.value = true
-            db.collection(POSTS)
-                .whereArrayContains(SEARCH_TERMS, searchTerm.trim().lowercase())
-                .get()
-                .addOnSuccessListener {
-                    convertSearchedPosts(it)
+            searchPosts.getResult(searchTerm)
+                .onSuccess {
+                    searchedPosts.value = it
                     searchedPostsProgress.value = false
                 }
-                .addOnFailureListener {
+                .onFailure {
                     Log.e("*** Cannot search posts", it.localizedMessage.orEmpty())
                     errorState.value = it
                     searchedPostsProgress.value = false
@@ -213,13 +210,12 @@ class IgViewModel @Inject constructor(
     }
 
     // todo create interactor for this
-    private fun onLogout() {
-        auth.signOut()
+    private suspend fun onLogout() {
+        signOut.execute()
         signedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
-        searchedPosts.value =
-            listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
+        searchedPosts.value = listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
         userFeed.value = listOf()
 //        comments.value = listOf() todo clear all of these on logout
     }
@@ -261,27 +257,24 @@ class IgViewModel @Inject constructor(
             }
     }
 
-    fun onLikePost(postData: PostData) {
-        auth.currentUser?.uid?.let { userId ->
-            postData.likes?.let { likes ->
-                val newLikes = arrayListOf<String>()
-                if (likes.contains(userId)) {
-                    newLikes.addAll(likes.filter { userId != it })
-                } else {
-                    newLikes.addAll(likes)
-                    newLikes.add(userId)
-                }
-                postData.postId?.let { postId ->
-                    db.collection(POSTS).document(postId).update("likes", newLikes)
-                        .addOnSuccessListener {
-                            postData.likes = newLikes
-                        }.addOnFailureListener {
-                            errorState.value =
-                                Throwable("Unable to like post", it)
-                        }
-                }
-            }
+    fun onLikePost(postData: PostData) = viewModelScope.launch {
+        val postId = postData.postId
+        val likes = postData.likes
+        val userId = userState.value?.userId
+        require(postId.isNullOrEmpty() || likes.isNullOrEmpty() || userId.isNullOrEmpty()) {
+            errorState.value = Throwable("Unable to like post")
         }
+
+        val newLikes = arrayListOf<String>()
+        if (likes!!.contains(userId)) {
+            newLikes.addAll(likes.filter { userId != it })
+        } else {
+            newLikes.addAll(likes + userId!!)
+        }
+
+        likePost.getResult(LikePost.Params(postId = postId!!, newLikes))
+            .onSuccess { postData.likes = newLikes }
+            .onFailure { errorState.value = Throwable("Unable to like post", it) }
     }
 }
 

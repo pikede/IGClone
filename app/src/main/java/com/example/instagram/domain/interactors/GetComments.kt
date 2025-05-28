@@ -19,5 +19,4 @@ class GetComments @Inject constructor(private val db: FirebaseFirestore) :
         val comments = documents.mapNotNull { it.toObject(CommentData::class.java) }
         return comments.sortedByDescending { it.timeStamp }
     }
-
 }

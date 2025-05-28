@@ -58,7 +58,7 @@ private fun SinglePost(
 ) { // todo fix sync issue from using not updating and using different viewModels
     val state by vm.state.collectAsStateWithLifecycle()
 
-    val comments = vm.comments.value
+    val comments = vm.commentsState.value
     LaunchedEffect(Unit) {
         vm.getComments()
     }
