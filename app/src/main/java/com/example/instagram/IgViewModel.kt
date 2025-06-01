@@ -23,7 +23,6 @@ import com.example.instagram.domain.interactors.SignOut
 import com.example.instagram.domain.interactors.SignUp
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
-import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -106,29 +105,24 @@ class IgViewModel @Inject constructor(
 
     fun onSignup() = viewModelScope.launch {
         with(state.value) {
-            require(!(userName.isNullOrEmpty() or email.isNullOrEmpty() or password.isNullOrEmpty())) {
+            if (userName.isNullOrEmpty() || email.isNullOrEmpty() || password.isNullOrEmpty()) {
                 errorState.value = Throwable("Please fill in all fields")
                 return@launch
             }
         }
         inProgressState.value = true
-        signUp.execute(userNameState.value.orEmpty())
-            .addOnSuccessListener { documents ->
+        runCatching { signUp.execute(userNameState.value.orEmpty()) }
+            .onSuccess { documents ->
                 when {
                     documents.size() > 0 -> {
                         errorState.value = Throwable("Username already exists")
-                        inProgressState.value = false
                     }
 
-                    else -> {
-                        createUser()
-                    }
+                    else -> createUser()
                 }
             }
-            .addOnFailureListener { exception ->
-                errorState.value = exception
-                inProgressState.value = false
-            }
+            .onFailure { exception -> errorState.value = exception }
+        inProgressState.value = false
     }
 
     private fun createUser() = viewModelScope.launch {
@@ -196,17 +190,6 @@ class IgViewModel @Inject constructor(
                     searchedPostsProgress.value = false
                 }
         }
-    }
-
-    // todo move create Interactor for this
-    private fun convertSearchedPosts(documents: QuerySnapshot) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        searchedPosts.value = sortedPosits
     }
 
     // todo create interactor for this

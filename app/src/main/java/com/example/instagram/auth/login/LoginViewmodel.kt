@@ -59,11 +59,9 @@ class LoginViewmodel @Inject constructor(
     }
 
     private fun onLogin() {
-        with(state.value) {
-            require(!(emailState.value.isNullOrEmpty() or passwordState.value.isNullOrEmpty())) {
-                errorState.value = Throwable("Please fill in all fields")
-                return
-            }
+        if(emailState.value.isNullOrEmpty() || passwordState.value.isNullOrEmpty()) {
+            errorState.value = Throwable("Please fill in all fields")
+            return
         }
         inProgressState.value = true
         auth.signInWithEmailAndPassword(emailState.value.orEmpty(), passwordState.value.orEmpty())
