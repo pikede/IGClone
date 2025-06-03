@@ -158,23 +158,12 @@ class IgViewModel @Inject constructor(
             imageUrl = imageUrl ?: userState.value?.imageUrl,
             following = userState.value?.following
         )
-        createOrUpdateProfile.execute(
-            CreateOrUpdateProfile.Params(
-                user = userData,
-                onSuccess = { userData ->
-                    userState.value = userData
-                    inProgressState.value = false
-                },
-                onError = {
-                    errorState.value = Throwable(it)
-                    inProgressState.value = false
-                },
-                onUpdate = {
-                    getUserData()
-                    inProgressState.value = false
-                }
-            )
-        )
+
+        inProgressState.value = true
+        createOrUpdateProfile.getResult(userData)
+            .onSuccess { userState.value = it }
+            .onFailure { errorState.value = it }
+        inProgressState.value = false
     }
 
     fun searchPosts(searchTerm: String) = viewModelScope.launch {

@@ -38,6 +38,7 @@ import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.FullscreenLoading
 
+// todo rename package and files to edit profile
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {
     Profile(navController = navController, modifier = modifier)
@@ -67,8 +68,7 @@ fun ProfileScreen(
         ProfileScreenContent(
             state = state,
             onBack = { navController.popBackStack() },
-            onSave = { state.onSave() },
-            navController = navController,
+            onSave = { state.onSave() }, // todo tell previous composable to reload when saving
             onLogout = {
                 state.onLogout()
                 navigateTo(navController, DestinationScreen.Login)
@@ -84,7 +84,6 @@ fun ProfileScreenContent(
     onBack: () -> Boolean,
     onSave: () -> Unit,
     onLogout: () -> Unit,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -105,7 +104,7 @@ fun ProfileScreenContent(
 
         CommonDivider()
 
-        ProfileImage(state = state, navController = navController)
+        ProfileImage(state = state)
 
         CommonDivider()
 
@@ -171,10 +170,8 @@ fun ProfileScreenContent(
 @Composable
 private fun ProfileImage(
     state: ProfileViewState,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             uri?.let {

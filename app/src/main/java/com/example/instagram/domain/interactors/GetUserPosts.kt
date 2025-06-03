@@ -10,7 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class RefreshUserPosts @Inject constructor(
+class GetUserPosts @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: FirebaseFirestore,
 ) : InteractorWithoutParams<List<PostData>>() {

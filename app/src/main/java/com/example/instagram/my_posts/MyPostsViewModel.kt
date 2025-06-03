@@ -8,7 +8,7 @@ import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.domain.interactors.GetFollowers
 import com.example.instagram.domain.interactors.GetUser
-import com.example.instagram.domain.interactors.RefreshUserPosts
+import com.example.instagram.domain.interactors.GetUserPosts
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class MyPostsViewModel @Inject constructor(
     private val getUser: GetUser,
-    private val refreshUserPosts: RefreshUserPosts,
+    private val getUserPosts: GetUserPosts,
     private val getFollowers: GetFollowers,
 ) : ViewModel() {
     private val default = MyPostsViewState.Companion.Empty
@@ -43,7 +43,7 @@ internal class MyPostsViewModel @Inject constructor(
         getUserData()
     }
 
-    private fun getUserData() = viewModelScope.launch {
+    internal fun getUserData() = viewModelScope.launch {
         inProgressState.value = true
         getUser.getResult()
             .onSuccess {
@@ -64,7 +64,7 @@ internal class MyPostsViewModel @Inject constructor(
 
     internal suspend fun refreshPosts() {
         refreshPostsProgressState.value = true
-        refreshUserPosts.getResult()
+        getUserPosts.getResult()
             .onSuccess { sortedPosts -> postsState.value = sortedPosts }
             .onFailure {
                 errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")

@@ -51,6 +51,7 @@ import com.example.instagram.core_ui_components.UserImageCard
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
+// todo rename package and files to profile
 @Composable
 fun MyPostsRoute(navController: NavController, modifier: Modifier = Modifier) {
     MyPosts(navController = navController, modifier = modifier)
@@ -64,6 +65,7 @@ private fun MyPosts(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val followers = vm.followers.intValue
+
     MyPostsScreen(
         state = state,
         navController = navController,
@@ -71,7 +73,7 @@ private fun MyPosts(
         modifier = modifier,
     )
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {// todo reload on resume here
         vm.refreshPosts()
     }
 }

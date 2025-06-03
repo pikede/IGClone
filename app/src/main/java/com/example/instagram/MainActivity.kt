@@ -9,7 +9,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -75,7 +74,6 @@ sealed interface DestinationScreen {
 @Composable
 fun InstagramApp(
     modifier: Modifier = Modifier,
-    viewModel: IgViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
     NavHost(navController = navController, startDestination = DestinationScreen.Signup) {
