@@ -2,7 +2,7 @@ package com.example.instagram.models
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import kotlinx.android.parcel.Parcelize
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 @Immutable

@@ -2,7 +2,6 @@ package com.example.instagram.auth.login
 
 import androidx.compose.runtime.Immutable
 import com.example.instagram.common.extensions.ViewEventSink
-import com.example.instagram.models.User
 
 @Immutable
 data class LoginScreenState(
@@ -10,7 +9,6 @@ data class LoginScreenState(
     val password: String? = null,
     val signedIn: Boolean = false,
     val inProgress: Boolean = false,
-    val user: User? = null,
     val error: Throwable? = null,
     val eventSink: ViewEventSink<LoginScreenEvent> = {},
 ) {

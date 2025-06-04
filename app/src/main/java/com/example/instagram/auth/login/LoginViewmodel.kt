@@ -4,49 +4,42 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.ViewEventSinkFlow
-import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.models.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
+import com.example.instagram.domain.InvalidUserException
+import com.example.instagram.domain.UserNotFoundException
+import com.example.instagram.domain.interactors.GetUser
+import com.example.instagram.domain.interactors.SignIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewmodel @Inject constructor(
-    private val auth: FirebaseAuth,
-    private val db: FirebaseFirestore,
-    private val storage: FirebaseStorage,
+    private val getUser: GetUser,
+    private val signIn: SignIn,
 ) : ViewModel() {
-    val default = LoginScreenState.Empty
-    val emailState = MutableStateFlow(default.email)
-    val passwordState = MutableStateFlow(default.password)
-    val signedInState = MutableStateFlow(default.signedIn)
-    val userState = MutableStateFlow(default.user)
-    val inProgressState = MutableStateFlow(default.inProgress)
-    val errorState = MutableStateFlow(default.error)
+    private val default = LoginScreenState.Empty
+    private val emailState = MutableStateFlow(default.email)
+    private val passwordState = MutableStateFlow(default.password)
+    private val signedInState = MutableStateFlow(default.signedIn)
+    private val inProgressState = MutableStateFlow(default.inProgress)
+    private val errorState = MutableStateFlow(default.error)
 
     val state = combine(
         emailState,
         passwordState,
         signedInState,
         inProgressState,
-        userState,
         errorState,
         eventSink(),
         ::LoginScreenState
     ).stateInDefault(viewModelScope, default)
 
     init {
-        val currentUser = auth.currentUser
-        signedInState.value = currentUser != null
-        currentUser?.uid?.let { userId ->
-            getUserData(userId)
-        }
+        getExistingUser()
     }
 
     private fun eventSink(): ViewEventSinkFlow<LoginScreenEvent> = flowOf { event ->
@@ -58,49 +51,32 @@ class LoginViewmodel @Inject constructor(
         }
     }
 
-    private fun onLogin() {
-        with(state.value) {
-            require(!(emailState.value.isNullOrEmpty() or passwordState.value.isNullOrEmpty())) {
-                errorState.value = Throwable("Please fill in all fields")
-                return
-            }
+    private fun onLogin() = viewModelScope.launch {
+        if (emailState.value.isNullOrEmpty() || passwordState.value.isNullOrEmpty()) {
+            errorState.value = Throwable("Please fill in all fields")
+            return@launch
         }
         inProgressState.value = true
-        auth.signInWithEmailAndPassword(emailState.value.orEmpty(), passwordState.value.orEmpty())
-            .addOnCompleteListener { task ->
-                when {
-                    task.isSuccessful -> {
-                        signedInState.value = true
-                        auth.currentUser?.uid?.let { userId ->
-                            getUserData(userId)
-                            errorState.value = Throwable("Login Successful")
-                        }
-                    }
+        signIn.getResult(SignIn.Params(emailState.value.orEmpty(), passwordState.value.orEmpty()))
+            .onSuccess {
+                signedInState.value = true
+                Log.d("*** LoginViewmodel", "onLogin: Login Successful")
+            }.onFailure { errorState.value = it }
 
-                    else -> errorState.value = task.exception
-                }
-                inProgressState.value = false
-            }
-            .addOnFailureListener {
-                errorState.value = it
-                inProgressState.value = false
-            }
+        inProgressState.value = false
     }
 
-    // TODO move to interactor and remove the duplicate method in @IgViewmodel
-    private fun getUserData(uid: String) {
-        inProgressState.value =
-            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
-        db.collection(USERS).document(uid)
-            .get()  // TODO create a helper that gets the document from firebase in an Interactor
-            .addOnSuccessListener {
-                val user = it.toObject(User::class.java)
-                userState.value = user
-                inProgressState.value = false
+    private fun getExistingUser() = viewModelScope.launch {
+        inProgressState.value = true
+        getUser.getResult()
+            .onSuccess { signedInState.value = true }
+            .onFailure {
+                Log.e("*** LoginViewmodel", "getUserData: ${it.message}")
+                val expectedCauses = setOf(UserNotFoundException, InvalidUserException)
+                if (it !in expectedCauses) { // ignoring these errors as a different user may be logging in
+                    errorState.value = it
+                }
             }
-            .addOnFailureListener {
-                errorState.value = it
-                Log.e("*** Failed to getData after login", it.localizedMessage.orEmpty())
-            }
+        inProgressState.value = false
     }
 }

@@ -24,21 +24,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.instagram.IgViewModel
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.models.CommentData
 
 @Composable
 fun CommentsRoute(
-    navController: NavHostController,
-    viewModel: IgViewModel,
     postId: String,
+    viewModel: CommentViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     CommentsScreen(
-        viewModel = viewModel,
+        state = state,
         postId = postId,
         modifier = modifier
     )
@@ -49,20 +50,15 @@ fun CommentsRoute(
 }
 
 @Composable
-fun CommentsScreen(
-    viewModel: IgViewModel,
+private fun CommentsScreen(
+    state: CommentsViewState,
     postId: String,
     modifier: Modifier = Modifier,
 ) {
-    var commentText by rememberSaveable { mutableStateOf("") }
-    val focusManager = LocalFocusManager.current
-
-    val comments = viewModel.comments.value
-    val commentsProgress = viewModel.commentsProgress.value
 
     Column(modifier = modifier.fillMaxSize()) {
         when {
-            commentsProgress -> {
+            state.inProgress -> {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
@@ -72,7 +68,7 @@ fun CommentsScreen(
                 }
             }
 
-            comments.isEmpty() -> {
+            state.comments.isEmpty() -> {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
@@ -84,40 +80,53 @@ fun CommentsScreen(
 
             else -> {
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(items = comments) { comment ->
+                    items(items = state.comments) { comment ->
                         CommentRow(comment = comment)
                     }
                 }
             }
         }
 
-        Row(
+        AddComment(state = state, postId = postId)
+    }
+}
+
+@Composable
+private fun AddComment(
+    state: CommentsViewState,
+    postId: String,
+    modifier: Modifier = Modifier,
+) {
+    var commentText by rememberSaveable { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
+
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        TextField(
+            value = commentText,
+            onValueChange = { commentText = it },
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            TextField(
-                value = commentText,
-                onValueChange = { commentText = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .border(1.dp, Color.LightGray),
-                colors = BlackTransparentTextContainer(
-                    focusedLabelColor = Color.Transparent,
-                    unfocusedLabelColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                )
+                .weight(1f)
+                .border(1.dp, Color.LightGray),
+            colors = BlackTransparentTextContainer(
+                focusedLabelColor = Color.Transparent,
+                unfocusedLabelColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
             )
-            Button(
-                onClick = {
-                    viewModel.createComment(text = commentText, postId = postId)
-                    commentText = ""
-                    focusManager.clearFocus()
-                },
-                modifier.padding(start = 8.dp)
-            ) {
-                Text(text = "Comment")
-            }
+        )
+        Button(
+            onClick = {
+                state.createComment(postId = postId, commentText = commentText)
+                commentText = ""
+                focusManager.clearFocus()
+            },
+            modifier.padding(start = 8.dp)
+        ) {
+            Text(text = "Comment")
         }
     }
 }

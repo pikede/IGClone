@@ -58,7 +58,7 @@ private fun SignupScreen(
 
     when {
         state.signedIn -> CheckSignedIn(
-            signedIn = state.signedIn,
+            signedIn = true,
             navController = navController,
         )
 
