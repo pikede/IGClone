@@ -10,8 +10,8 @@ import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.domain.InvalidUserException
 import com.example.instagram.domain.UserCreationFailedException
+import com.example.instagram.domain.UserNotLoggedInExceptions
 import com.example.instagram.domain.interactors.CreateOrUpdateProfile
 import com.example.instagram.domain.interactors.CreateUser
 import com.example.instagram.domain.interactors.GetGeneralFeed
@@ -81,16 +81,16 @@ class IgViewModel @Inject constructor(
             .onSuccess { user ->
                 signedInState.value = true
                 userState.value = user
-                inProgressState.value = false
                 getPersonalizedFeed()
             }
             .onFailure {
-                errorState.value = it
-                inProgressState.value = false
-                if (it == InvalidUserException) {
+                if (it !in UserNotLoggedInExceptions) { // ignoring these errors as a different user may be logging in
+                    errorState.value = it
                     onLogout()
+                    return@launch
                 }
             }
+        inProgressState.value = false
     }
 
     private fun eventSink(): ViewEventSinkFlow<SignupScreenEvent> = flowOf { event ->
@@ -121,7 +121,9 @@ class IgViewModel @Inject constructor(
                     else -> createUser()
                 }
             }
-            .onFailure { exception -> errorState.value = exception }
+            .onFailure { exception ->
+                errorState.value = exception
+            }
         inProgressState.value = false
     }
 
@@ -181,7 +183,6 @@ class IgViewModel @Inject constructor(
         }
     }
 
-    // todo create interactor for this
     private suspend fun onLogout() {
         signOut.execute()
         signedInState.value = false
@@ -189,7 +190,6 @@ class IgViewModel @Inject constructor(
         notificationState.value = OneTimeEvent("Logout")
         searchedPosts.value = listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
         userFeed.value = listOf()
-//        comments.value = listOf() todo clear all of these on logout
     }
 
     private suspend fun getPersonalizedFeed() {

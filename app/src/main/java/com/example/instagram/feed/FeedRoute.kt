@@ -120,7 +120,7 @@ fun PostsList(
 ) {
     Box(modifier = modifier) {
         LazyColumn {
-            items(items = posts) {
+            items(items = posts, key = { it.postId.hashCode() }) {
                 Post(
                     postData = it,
                     currentUserId = currentUserId,
