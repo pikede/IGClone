@@ -71,6 +71,8 @@ private fun Feed(
         modifier = modifier,
         navController = navController
     )
+
+    // todo whenever resume here get personalize feed
 }
 
 @Composable

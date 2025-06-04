@@ -14,8 +14,6 @@ import com.example.instagram.domain.interactors.SignOut
 import com.example.instagram.domain.interactors.UpdatePostUserImage
 import com.example.instagram.domain.interactors.UploadImage
 import com.example.instagram.models.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -24,8 +22,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ProfileViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val storage: FirebaseStorage,
     private val createOrUpdateProfile: CreateOrUpdateProfile,
     private val getUser: GetUser,
     private val signOut: SignOut,
