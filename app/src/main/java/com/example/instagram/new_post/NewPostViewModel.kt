@@ -60,9 +60,9 @@ internal class NewPostViewModel @Inject constructor(
                 notificationState.value = OneTimeEvent("Post successfully created")
                 onPostSuccess.invoke()
             }.onFailure {
-            errorState.value = it
-            notificationState.value = OneTimeEvent("Unable to create post")
-        }
+                errorState.value = it
+                notificationState.value = OneTimeEvent("Unable to create post")
+            }
     }
 
     private suspend fun uploadImage(uri: Uri, onImageUploaded: suspend (Uri) -> Unit) {
