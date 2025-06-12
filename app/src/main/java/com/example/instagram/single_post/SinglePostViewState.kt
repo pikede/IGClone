@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSink
 import com.example.instagram.core_data.Fakes
 import com.example.instagram.models.PostData
@@ -16,13 +15,14 @@ import com.example.instagram.models.User
 data class SinglePostViewState(
     val inProgress: Boolean = false,
     val user: User? = null,
-    val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,
-    val refreshPostsProgress: Boolean = false,
     val postData: PostData? = null,
-    val isSignedIn: Boolean = true,
+    val isFollowingTextVisible: Boolean = false,
     val eventSink: ViewEventSink<SinglePostScreenEvent> = {},
 ) {
+    val isFollowing = user?.following?.contains(postData?.userId) == true
+    val followText = if (isFollowing) "Following" else "Follow"
+
     companion object {
         val Empty = SinglePostViewState()
 

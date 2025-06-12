@@ -32,9 +32,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.common.ui.navigation.CheckSignedIn
+import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.ShowErrorModal
-import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.ui.theme.AppTheme
 
 @Composable
@@ -54,7 +54,7 @@ private fun LoginScreen(
     val state by loginViewmodel.state.collectAsStateWithLifecycle()
     when {
         state.signedIn -> CheckSignedIn(
-            signedIn = state.signedIn,
+            signedIn = true,
             navController = navController,
         )
 

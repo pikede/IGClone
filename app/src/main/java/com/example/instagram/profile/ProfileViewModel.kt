@@ -1,46 +1,42 @@
 package com.example.instagram.profile
 
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
-import com.example.instagram.common.util.Constants.POSTS
-import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.models.PostData
+import com.example.instagram.domain.interactors.CreateOrUpdateProfile
+import com.example.instagram.domain.interactors.GetUser
+import com.example.instagram.domain.interactors.GetUserId
+import com.example.instagram.domain.interactors.SignOut
+import com.example.instagram.domain.interactors.UpdatePostUserImage
+import com.example.instagram.domain.interactors.UploadImage
 import com.example.instagram.models.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import java.util.UUID
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ProfileViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val db: FirebaseFirestore,
-    val storage: FirebaseStorage,
+    private val createOrUpdateProfile: CreateOrUpdateProfile,
+    private val getUser: GetUser,
+    private val signOut: SignOut,
+    private val uploadImage: UploadImage,
+    private val updatePostUserImage: UpdatePostUserImage,
+    private val getUserId: GetUserId,
 ) : ViewModel() {
     private val default = ProfileViewState.Companion.Empty
     private val inProgressState = MutableStateFlow(default.inProgress)
-    private val isSignedInState = MutableStateFlow(default.isSignedIn)
     private val userState = MutableStateFlow(default.user)
-    val notificationState = MutableStateFlow(default.notification)
+    private val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
 
     val state = combine(
         inProgressState,
-        isSignedInState,
         userState,
         notificationState,
         errorState,
@@ -49,26 +45,15 @@ internal class ProfileViewModel @Inject constructor(
     ).stateInDefault(viewModelScope, default)
 
     init {
-        val currentUser = auth.currentUser
-        currentUser?.uid?.let { userId ->
-            getUserData(userId) // todo cash getUserData after getting with interactor value
-        }
+        getUserData()
     }
 
-    private fun getUserData(uid: String) {
-        inProgressState.value =
-            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
-        db.collection(USERS).document(uid)
-            .get()  // TODO create a helper that gets the document from firebase in an Interactor
-            .addOnSuccessListener {
-                val user = it.toObject(User::class.java)
-                userState.value = user
-                inProgressState.value = false
-            }
-            .addOnFailureListener {
-                errorState.value = it
-                Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
-            }
+    private fun getUserData() = viewModelScope.launch {
+        inProgressState.value = true
+        getUser.getResult()
+            .onSuccess { userState.value = it }
+            .onFailure { errorState.value = it }
+        inProgressState.value = false
     }
 
     private fun eventSink(): ViewEventSinkFlow<ProfileScreenEvent> = flowOf { event ->
@@ -83,29 +68,24 @@ internal class ProfileViewModel @Inject constructor(
             is ProfileScreenEvent.UpdateUserName -> userState.value =
                 userState.value?.copy(userName = event.newUserName)
 
-            ProfileScreenEvent.Save -> onSave()
+            ProfileScreenEvent.Save -> createOrUpdateProfile(
+                name = userState.value?.name,
+                username = userState.value?.userName,
+                bio = userState.value?.bio,
+            )
+
             is ProfileScreenEvent.UpdateProfileImageUrl -> uploadProfileImage(event.uri)
             ProfileScreenEvent.Logout -> onLogout()
         }
     }
 
-    private fun ProfileViewModel.onSave() {
-        createOrUpdateProfile(
-            name = userState.value?.name,
-            username = userState.value?.userName,
-            bio = userState.value?.bio,
-//            imageUrl = userState.value?.imageUrl // commented out as no image is being set currently
-        )
-    }
-
-    // TODO create interactor for this
     private fun createOrUpdateProfile(
         name: String? = null,
         username: String? = null,
         bio: String? = null,
         imageUrl: String? = null,
-    ) {
-        val uid = auth.currentUser?.uid
+    ) = viewModelScope.launch {
+        val uid = getUserId.execute()
         val userData = User(
             userId = uid,
             name = name ?: userState.value?.name,
@@ -114,137 +94,42 @@ internal class ProfileViewModel @Inject constructor(
             imageUrl = imageUrl ?: userState.value?.imageUrl,
             following = userState.value?.following
         )
-        uid?.let {
-            inProgressState.value = true
-            db.collection(USERS).document(uid).get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    document.reference.update(userData.toMap())
-                        .addOnSuccessListener {
-                            userState.value = userData
-                            inProgressState.value = false
-                        }
-                        .addOnFailureListener {
-                            errorState.value = Throwable(it)
-                            Log.e(
-                                "*** Failed to createOrUpdateProfile",
-                                it.localizedMessage.orEmpty()
-                            )
-                            inProgressState.value = false
-                        }
-                } else {
-                    db.collection(USERS).document(uid).set(userData)
-                    getUserData(uid)
-                    inProgressState.value = false
-                }
-            }.addOnFailureListener {
-                errorState.value = it
-                Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
-                inProgressState.value = false
-            }
-        }
+        createOrUpdateProfile.getResult(userData)
+            .onSuccess { userState.value = it }
+            .onFailure { errorState.value = it }
     }
 
-    private fun uploadImage(uri: Uri, onSuccess: (Uri) -> Unit) {
-        inProgressState.value = true
-        val storageRef = storage.reference
-        val uuid = UUID.randomUUID()
-        val imageRef = storageRef.child("images/$uuid")
-        val uploadTask = imageRef.putFile(uri)
-
-        uploadTask
-            .addOnSuccessListener {
-                val result = it.metadata?.reference?.downloadUrl
-                result?.addOnSuccessListener(onSuccess)
-            }
-            .addOnFailureListener {
-                errorState.value = it
-                inProgressState.value = false
-            }
-    }
-
-    private fun uploadProfileImage(uri: Uri) {
+    private fun uploadProfileImage(uri: Uri) = viewModelScope.launch {
         uploadImage(
             uri = uri,
             onSuccess = {
                 createOrUpdateProfile(imageUrl = it.toString())
-                updatePostUserImageData(it.toString())
             })
     }
 
-    // todo move to interactor
-    private fun updatePostUserImageData(imageUrl: String) {
-        val currentuUid = auth.currentUser?.uid
-        db.collection(POSTS)
-            .whereEqualTo("userId", currentuUid)
-            .get()
-            .addOnSuccessListener {
-                val posts = mutableStateOf<List<PostData>>(arrayListOf())
-                convertPosts(it, posts)
-                val refs = arrayListOf<DocumentReference>()
-                for (post in posts.value) {
-                    post.postId?.let { id ->
-                        refs.add(db.collection(POSTS).document(id))
-                    }
+    private fun uploadImage(uri: Uri, onSuccess: (Uri) -> Unit) = viewModelScope.launch {
+        inProgressState.value = true
+        uploadImage.getResult(uri)
+            .onSuccess { imageUri ->
+                if (imageUri != null) {
+                    onSuccess(imageUri)
+                    updatePostUserImageData(imageUri.toString())
+                } else {
+                    errorState.value = Throwable("Image uploaded but not found")
                 }
-                if (refs.isNotEmpty()) {
-                    db.runBatch { batch ->
-                        for (ref in refs) {
-                            batch.update(ref, "userImage", imageUrl)
-                        }
-                    }.addOnSuccessListener {
-                        refreshPosts()
-                    }
-                }
+            }.onFailure { errorState.value = it }
+        inProgressState.value = false
+    }
+
+    private suspend fun updatePostUserImageData(imageUrl: String) {
+        updatePostUserImage.getResult(imageUrl)
+            .onFailure {
+                errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
             }
     }
 
-    // todo move to Interactor
-    internal fun refreshPosts() {
-        val currentUid = auth.currentUser?.uid
-        currentUid?.let {
-            inProgressState.value = true
-            db.collection(POSTS)
-                .whereEqualTo("userId", currentUid).get()
-                .addOnSuccessListener { documents ->
-                    convertPosts(documents)
-                }.addOnFailureListener {
-                    errorState.value = it
-                    notificationState.value = OneTimeEvent("Cannot fetch posts")
-                }
-            inProgressState.value = false
-        } ?: run {
-            onLogout()
-            errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
-        }
-    }
-
-    // todo move create Interactor for this
-    private fun convertPosts(documents: QuerySnapshot, outState: MutableState<List<PostData>>) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        outState.value = sortedPosits
-    }
-
-    // todo move create Interactor for this
-    private fun convertPosts(documents: QuerySnapshot) {
-        /* todo duplicate
-        val newPosts = mutableListOf<PostData>()
-                for (document in documents) {
-                    val post = document.toObject(PostData::class.java)
-                    newPosts.add(post)
-                }
-                val sortedPosits = newPosts.sortedByDescending { it.time }
-                postsState.value = sortedPosits*/
-    }
-
-    // todo create interactor for this
-    private fun onLogout() {
-        auth.signOut()
-        isSignedInState.value = false
+    private fun onLogout() = viewModelScope.launch {
+        signOut.execute()
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
     }

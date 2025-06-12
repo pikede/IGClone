@@ -41,3 +41,9 @@ fun CheckSignedIn(
         }
     }
 }
+
+fun logOutAndClearBackstack(navController: NavController) {
+    navController.navigate(DestinationScreen.Login) {
+        popUpTo(0)
+    }
+}

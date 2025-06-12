@@ -3,12 +3,18 @@ package com.example.instagram.core_ui_components
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.instagram.common.extensions.OneTimeEvent
+import kotlinx.coroutines.delay
 
 // TODO create notification toast
 @Composable
@@ -33,16 +39,27 @@ fun ShowErrorModal(
 ) {
     val errorMsg = error.localizedMessage ?: ""
     val message = if (customMessage.isEmpty()) errorMsg else "$customMessage: $errorMsg"
-    val context = LocalContext.current
 
-    Box(modifier = modifier.clickable { onDismiss() }) {
-        Toast.makeText(context, message, Toast.LENGTH_LONG)
-            .show() // todo replace with clickable error modal
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Text(text = message, modifier = Modifier.padding(25.dp))
     }
 
-    val coroutineScope = rememberCoroutineScope()
-    LaunchedEffect(error, onDismiss, coroutineScope) {
+    LaunchedEffect(error, onDismiss) {
+        delay(4000)
         onDismiss()
     }
 }
 
+@Preview
+@Composable
+private fun ShowErrorModalPreview() {
+    ShowErrorModal(
+        error = Throwable("Error"),
+        customMessage = "Custom Error Message"
+    )
+}

@@ -29,8 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.instagram.DestinationScreen
-import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.common.ui.navigation.logOutAndClearBackstack
 import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
@@ -38,6 +37,7 @@ import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.FullscreenLoading
 
+// todo rename package and files to edit profile
 @Composable
 fun ProfileRoute(navController: NavController, modifier: Modifier = Modifier) {
     Profile(navController = navController, modifier = modifier)
@@ -67,11 +67,10 @@ fun ProfileScreen(
         ProfileScreenContent(
             state = state,
             onBack = { navController.popBackStack() },
-            onSave = { state.onSave() },
-            navController = navController,
+            onSave = { state.onSave() }, // todo tell previous composable to reload when saving
             onLogout = {
                 state.onLogout()
-                navigateTo(navController, DestinationScreen.Login)
+                logOutAndClearBackstack(navController)
             }
         )
     }
@@ -84,7 +83,6 @@ fun ProfileScreenContent(
     onBack: () -> Boolean,
     onSave: () -> Unit,
     onLogout: () -> Unit,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -105,7 +103,7 @@ fun ProfileScreenContent(
 
         CommonDivider()
 
-        ProfileImage(state = state, navController = navController)
+        ProfileImage(state = state)
 
         CommonDivider()
 
@@ -171,10 +169,8 @@ fun ProfileScreenContent(
 @Composable
 private fun ProfileImage(
     state: ProfileViewState,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
             uri?.let {

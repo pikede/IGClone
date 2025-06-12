@@ -55,10 +55,10 @@ private fun SinglePost(
     navController: NavController,
     modifier: Modifier = Modifier,
     vm: SinglePostViewModel = hiltViewModel<SinglePostViewModel>(),
-) { // todo fix sync issue from using not updating and using different viewModels
+) {
     val state by vm.state.collectAsStateWithLifecycle()
 
-    val comments = vm.comments.value
+    val comments = vm.commentsState.value
     LaunchedEffect(Unit) {
         vm.getComments()
     }
@@ -107,7 +107,6 @@ private fun SinglePostDisplay(
     commentsSize: Int,
     modifier: Modifier = Modifier,
 ) {
-    val userData = state.user
     Box(
         modifier
             .fillMaxWidth()
@@ -115,33 +114,27 @@ private fun SinglePostDisplay(
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Card(
-                shape = CircleShape, modifier = Modifier
+                shape = CircleShape,
+                modifier = Modifier
                     .padding(8.dp)
                     .size(32.dp)
             ) {
                 Image(
-                    painter = rememberImagePainter(data = userData?.imageUrl),
+                    painter = rememberImagePainter(data = state.postData?.userImage),
                     contentDescription = null
                 )
             }
             Text(text = state.postData?.username.orEmpty())
-            Text(text = ".", modifier = Modifier.padding(8.dp))
-            if (userData?.userId == state.postData?.userId) {
-                // current userPost. Don't show anything
-            } else if (userData?.following?.contains(state.postData?.userId) == true) {
+            if (state.isFollowingTextVisible) {
                 Text(
-                    text = "Following",
-                    color = Color.Gray,
-                    modifier = Modifier.clickable {
-                        state.postData?.userId?.let { state.onFollow(it) }
-                    })
-            } else {
-                Text(
-                    text = "Follow",
-                    color = Color.Blue,
-                    modifier = Modifier.clickable {
-                        state.postData?.userId?.let { state.onFollow(it) }
-                    })
+                    text = state.followText,
+                    color = if (state.isFollowing) Color.Gray else Color.Blue,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .clickable {
+                            state.postData?.userId?.let { state.onFollow(it) }
+                        }
+                )
             }
         }
     }

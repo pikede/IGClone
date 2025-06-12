@@ -1,8 +1,6 @@
 package com.example.instagram
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,31 +8,38 @@ import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
-import com.example.instagram.common.util.Constants.COMMENTS
-import com.example.instagram.common.util.Constants.FOLLOWING
-import com.example.instagram.common.util.Constants.POSTS
-import com.example.instagram.common.util.Constants.POST_ID
-import com.example.instagram.common.util.Constants.SEARCH_TERMS
-import com.example.instagram.common.util.Constants.USERNAME
-import com.example.instagram.common.util.Constants.USERS
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
-import com.example.instagram.models.CommentData
+import com.example.instagram.domain.UserCreationFailedException
+import com.example.instagram.domain.UserNotLoggedInExceptions
+import com.example.instagram.domain.interactors.CreateOrUpdateProfile
+import com.example.instagram.domain.interactors.CreateUser
+import com.example.instagram.domain.interactors.GetGeneralFeed
+import com.example.instagram.domain.interactors.GetPersonalizedFeed
+import com.example.instagram.domain.interactors.GetUser
+import com.example.instagram.domain.interactors.LikePost
+import com.example.instagram.domain.interactors.SearchPosts
+import com.example.instagram.domain.interactors.SignOut
+import com.example.instagram.domain.interactors.SignUp
 import com.example.instagram.models.PostData
 import com.example.instagram.models.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
-import java.util.UUID
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class IgViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val db: FirebaseFirestore,
+    private val getUser: GetUser,
+    private val signUp: SignUp,
+    private val signOut: SignOut,
+    private val createOrUpdateProfile: CreateOrUpdateProfile,
+    private val createUser: CreateUser,
+    private val getGeneralFeed: GetGeneralFeed,
+    private val getPersonalizedFeed: GetPersonalizedFeed,
+    private val likePost: LikePost,
+    private val searchPosts: SearchPosts
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -47,11 +52,8 @@ class IgViewModel @Inject constructor(
     private val errorState = MutableStateFlow(default.error)
     val searchedPosts = MutableStateFlow(default.searchedPosts)
     val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
-    val postsFeed = mutableStateOf<List<PostData>>(listOf())
-    val postsFeedProgress = mutableStateOf(false)
-    val comments = mutableStateOf<List<CommentData>>(listOf())
-    internal val commentsProgress = mutableStateOf(false)
-    val followers = mutableIntStateOf(0)
+    val userFeed = mutableStateOf<List<PostData>>(listOf())
+    val isFeedInProgress = mutableStateOf(false)
 
     internal val state = combine(
         userNameState,
@@ -69,12 +71,26 @@ class IgViewModel @Inject constructor(
     ).stateInDefault(viewModelScope, default)
 
     init {
-//        auth.signOut()
-        val currentUser = auth.currentUser
-        signedInState.value = currentUser != null
-        currentUser?.uid?.let { userId ->
-            getUserData(userId)
-        }
+        getUserData()
+    }
+
+    private fun getUserData() = viewModelScope.launch {
+        inProgressState.value = true
+
+        getUser.getResult()
+            .onSuccess { user ->
+                signedInState.value = true
+                userState.value = user
+                getPersonalizedFeed()
+            }
+            .onFailure {
+                if (it !in UserNotLoggedInExceptions) { // ignoring these errors as a different user may be logging in
+                    errorState.value = it
+                    onLogout()
+                    return@launch
+                }
+            }
+        inProgressState.value = false
     }
 
     private fun eventSink(): ViewEventSinkFlow<SignupScreenEvent> = flowOf { event ->
@@ -87,45 +103,40 @@ class IgViewModel @Inject constructor(
         }
     }
 
-    fun onSignup() {
+    fun onSignup() = viewModelScope.launch {
         with(state.value) {
-            require(!(userName.isNullOrEmpty() or email.isNullOrEmpty() or password.isNullOrEmpty())) {
+            if (userName.isNullOrEmpty() || email.isNullOrEmpty() || password.isNullOrEmpty()) {
                 errorState.value = Throwable("Please fill in all fields")
-                return
+                return@launch
             }
         }
-
         inProgressState.value = true
-        db.collection(USERS).whereEqualTo(USERNAME, userNameState.value.orEmpty()).get()
-            .addOnSuccessListener { documents ->
+        runCatching { signUp.execute(userNameState.value.orEmpty()) }
+            .onSuccess { documents ->
                 when {
                     documents.size() > 0 -> {
                         errorState.value = Throwable("Username already exists")
-                        inProgressState.value = false
                     }
 
-                    else -> {
-                        auth.createUserWithEmailAndPassword(
-                            emailState.value.orEmpty(),
-                            passwordState.value.orEmpty()
-                        ).addOnCompleteListener { task ->
-                            when {
-                                task.isSuccessful -> {
-                                    signedInState.value = true
-                                    createOrUpdateProfile(username = userNameState.value)
-                                }
-
-                                else -> errorState.value = task.exception
-                            }
-                            inProgressState.value = false
-                        }
-                    }
+                    else -> createUser()
                 }
             }
-            .addOnFailureListener { exception ->
-                errorState.value = exception
-                inProgressState.value = false
-            }
+            .onFailure { exception -> errorState.value = exception }
+        inProgressState.value = false
+    }
+
+    private fun createUser() = viewModelScope.launch {
+        createUser.getResult(
+            CreateUser.Params(
+                email = emailState.value.orEmpty(),
+                password = passwordState.value.orEmpty()
+            )
+        ).onSuccess {
+            signedInState.value = true
+            createOrUpdateProfile(username = userNameState.value)
+        }.onFailure {
+            errorState.value = UserCreationFailedException
+        }
     }
 
     private fun createOrUpdateProfile(
@@ -133,108 +144,30 @@ class IgViewModel @Inject constructor(
         username: String? = null,
         bio: String? = null,
         imageUrl: String? = null,
-    ) {
-        val uid = auth.currentUser?.uid
+    ) = viewModelScope.launch {
         val userData = User(
-            userId = uid,
             name = name ?: userState.value?.name,
             userName = username ?: userState.value?.userName,
             bio = bio ?: userState.value?.bio,
             imageUrl = imageUrl ?: userState.value?.imageUrl,
             following = userState.value?.following
         )
-        uid?.let {
-            inProgressState.value = true
-            db.collection(USERS).document(uid).get().addOnSuccessListener { document ->
-                if (document.exists()) {
-                    document.reference.update(userData.toMap())
-                        .addOnSuccessListener {
-                            userState.value = userData
-                            inProgressState.value = false
-                        }
-                        .addOnFailureListener {
-                            errorState.value = Throwable(it)
-                            Log.e(
-                                "*** Failed to createOrUpdateProfile",
-                                it.localizedMessage.orEmpty()
-                            )
-                            inProgressState.value = false
-                        }
-                } else {
-                    db.collection(USERS).document(uid).set(userData)
-                    getUserData(uid)
-                    inProgressState.value = false
-                }
-            }.addOnFailureListener {
-                errorState.value = it
-                Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
-                inProgressState.value = false
-            }
-        }
+
+        inProgressState.value = true
+        createOrUpdateProfile.getResult(userData)
+            .onSuccess { userState.value = it }
+            .onFailure { errorState.value = it }
+        inProgressState.value = false
     }
 
-    private fun getUserData(uid: String) {
-        inProgressState.value =
-            true // TODO make there's no issue when this is reached as false is called when @getUserData is called
-        db.collection(USERS).document(uid)
-            .get()  // TODO create a helper that gets the document from firebase in an Interactor
-            .addOnSuccessListener {
-                val user = it.toObject(User::class.java)
-                userState.value = user
-                inProgressState.value = false
-                refreshPosts()
-                getPersonalizedFeed()
-                getFollowers(user?.userId)
-            }
-            .addOnFailureListener {
-                errorState.value = it
-                Log.e("*** Failed to createOrUpdateProfile", it.localizedMessage.orEmpty())
-            }
-    }
-
-    // todo move to interactor and remove duplicates
-    private fun refreshPosts() {
-        val currentUid = auth.currentUser?.uid
-        currentUid?.let {
-            inProgressState.value = true
-            db.collection(POSTS)
-                .whereEqualTo("userId", currentUid).get()
-                .addOnSuccessListener { documents ->
-                    convertPosts(documents)
-                }.addOnFailureListener {
-                    errorState.value = it
-                    notificationState.value = OneTimeEvent("Cannot fetch posts")
-                }
-            inProgressState.value = false
-        } ?: run {
-            onLogout()
-            errorState.value = Throwable("Error: username unavailable. Unable to refresh posts")
-        }
-    }
-
-    // todo move to Interactor and remove duplicate for this
-    private fun convertPosts(documents: QuerySnapshot) {
-        /* todo duplicate
-        val newPosts = mutableListOf<PostData>()
-                for (document in documents) {
-                    val post = document.toObject(PostData::class.java)
-                    newPosts.add(post)
-                }
-                val sortedPosits = newPosts.sortedByDescending { it.time }
-                postsState.value = sortedPosits*/
-    }
-
-    fun searchPosts(searchTerm: String) {
+    fun searchPosts(searchTerm: String) = viewModelScope.launch {
         if (searchTerm.isNotEmpty()) {
-            searchedPostsProgress.value = true
-            db.collection(POSTS)
-                .whereArrayContains(SEARCH_TERMS, searchTerm.trim().lowercase())
-                .get()
-                .addOnSuccessListener {
-                    convertSearchedPosts(it)
+            searchPosts.getResult(searchTerm)
+                .onSuccess {
+                    searchedPosts.value = it
                     searchedPostsProgress.value = false
                 }
-                .addOnFailureListener {
+                .onFailure {
                     Log.e("*** Cannot search posts", it.localizedMessage.orEmpty())
                     errorState.value = it
                     searchedPostsProgress.value = false
@@ -242,146 +175,71 @@ class IgViewModel @Inject constructor(
         }
     }
 
-    // todo move create Interactor for this
-    private fun convertSearchedPosts(documents: QuerySnapshot) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        searchedPosts.value = sortedPosits
-    }
-
-    // todo move create Interactor for this
-    private fun convertPosts(documents: QuerySnapshot, outState: MutableState<List<PostData>>) {
-        val newPosts = mutableListOf<PostData>()
-        for (document in documents) {
-            val post = document.toObject(PostData::class.java)
-            newPosts.add(post)
-        }
-        val sortedPosits = newPosts.sortedByDescending { it.time }
-        outState.value = sortedPosits
-    }
-
-    // todo create interactor for this
-    private fun onLogout() {
-        auth.signOut()
+    private suspend fun onLogout() {
+        signOut.execute()
         signedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
-        searchedPosts.value =
-            listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
-        postsFeed.value = listOf()
-        comments.value = listOf()
+        searchedPosts.value = listOf()
+        userFeed.value = listOf()
     }
 
-    private fun getPersonalizedFeed() {
+    private suspend fun getPersonalizedFeed() {
         val following = userState.value?.following
         if (!following.isNullOrEmpty()) {
-            postsFeedProgress.value = true
-            db.collection(POSTS).whereIn("userId", following).get()
-                .addOnSuccessListener { documents ->
-                    convertPosts(documents = documents, outState = postsFeed)
-                    if (postsFeed.value.isEmpty()) {
-                        getGeneralFeed()
+            isFeedInProgress.value = true
+            getPersonalizedFeed.getResult(following)
+                .onSuccess { posts ->
+                    if (posts.isNotEmpty()) {
+                        userFeed.value = posts
                     } else {
-                        postsFeedProgress.value = false
+                        getGeneralFeed()
                     }
-                }
-                .addOnFailureListener { exception ->
-                    errorState.value = exception
+                    isFeedInProgress.value = false
+                }.onFailure {
+                    errorState.value = it
                     notificationState.value = OneTimeEvent("Cannot fetch posts")
-                    postsFeedProgress.value = false
+                    isFeedInProgress.value = false
                 }
-
         } else {
             getGeneralFeed()
         }
     }
 
-    private fun getGeneralFeed() {
-        postsFeedProgress.value = true
+    private suspend fun getGeneralFeed() {
+        isFeedInProgress.value = true
         val currentTime = System.currentTimeMillis()
         val difference = 24 * 10060 * 60 * 1000 // 1 day in millis
         val timeAfter = currentTime - difference
-        db.collection(POSTS)
-            .whereGreaterThan("time", timeAfter).get()
-            .addOnSuccessListener {
-                convertPosts(documents = it, outState = postsFeed)
-                postsFeedProgress.value = false
-            }
-            .addOnFailureListener { exc ->
-                errorState.value = exc
-                postsFeedProgress.value = false
+        getGeneralFeed.getResult(timeAfter)
+            .onSuccess { posts ->
+                userFeed.value = posts
+                isFeedInProgress.value = false
+            }.onFailure {
+                errorState.value = it
+                isFeedInProgress.value = false
             }
     }
 
-    fun onLikePost(postData: PostData) {
-        auth.currentUser?.uid?.let { userId ->
-            postData.likes?.let { likes ->
-                val newLikes = arrayListOf<String>()
-                if (likes.contains(userId)) {
-                    newLikes.addAll(likes.filter { userId != it })
-                } else {
-                    newLikes.addAll(likes)
-                    newLikes.add(userId)
-                }
-                postData.postId?.let { postId ->
-                    db.collection(POSTS).document(postId).update("likes", newLikes)
-                        .addOnSuccessListener {
-                            postData.likes = newLikes
-                        }.addOnFailureListener {
-                            errorState.value =
-                                Throwable("Unable to like post", it)
-                        }
-                }
+    fun onLikePost(postData: PostData) = viewModelScope.launch {
+        val postId = postData.postId
+        val likes = postData.likes
+        val userId = userState.value?.userId
+        require(postId.isNullOrEmpty() || likes.isNullOrEmpty() || userId.isNullOrEmpty()) {
+            errorState.value = Throwable("Unable to like post")
+        }
+
+        val newLikes = buildList {
+            if (likes!!.contains(userId)) {
+                addAll(likes.filter { userId != it })
+            } else {
+                addAll(likes + userId!!)
             }
         }
-    }
 
-    fun createComment(postId: String, text: String) {
-        userState.value?.userName?.let { userName ->
-            val commentId = UUID.randomUUID().toString()
-            val comment = CommentData(
-                commentId = commentId,
-                postId = postId,
-                userName = userName,
-                text = text,
-                timeStamp = System.currentTimeMillis()
-            )
-            db.collection(COMMENTS).document(commentId).set(comment)
-                .addOnSuccessListener { getComments(postId) }
-                .addOnFailureListener {
-                    errorState.value = Throwable("Cannot Create Comment", it)
-                }
-        }
-    }
-
-    fun getComments(postId: String) {
-        commentsProgress.value = true
-        db.collection(COMMENTS).whereEqualTo(POST_ID, postId).get()
-            .addOnSuccessListener { documents ->
-                val newComments = mutableListOf<CommentData>()
-                documents.forEach { doc ->
-                    val comment = doc.toObject(CommentData::class.java)
-                    newComments.add(comment)
-                }
-                val sortedComments = newComments.sortedByDescending { it.timeStamp }
-                comments.value = sortedComments
-                commentsProgress.value = false
-            }
-            .addOnFailureListener { cause ->
-                errorState.value = Throwable("Cannot retrieve comments", cause)
-                commentsProgress.value = false
-            }
-    }
-
-    private fun getFollowers(uid: String?) {
-        db.collection(USERS).whereArrayContains(FOLLOWING, uid.orEmpty()).get()
-            .addOnSuccessListener { document ->
-                followers.value = document.size()
-            }
+        likePost.getResult(LikePost.Params(postId = postId!!, newLikes))
+            .onSuccess { postData.likes = newLikes }
+            .onFailure { errorState.value = Throwable("Unable to like post", it) }
     }
 }
 
