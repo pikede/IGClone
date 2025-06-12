@@ -15,7 +15,6 @@ import com.example.instagram.models.User
 @Immutable
 data class ProfileViewState(
     val inProgress: Boolean = false,
-    val isSignedIn: Boolean = false,
     val user: User? = null,
     val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,
@@ -28,12 +27,10 @@ data class ProfileViewState(
         fun preview(): ProfileViewState {
             var user by remember { mutableStateOf<User>(Fakes.User) }
             var error = remember { mutableStateOf<Throwable?>(null) }
-            var isSignedIn by remember { mutableStateOf<Boolean>(false) }
             var state by remember {
                 mutableStateOf(
                     Empty.copy(
                         inProgress = false,
-                        isSignedIn = isSignedIn,
                         user = user,
                     )
                 )
@@ -55,7 +52,7 @@ data class ProfileViewState(
                         user.copy(imageUrl = event.uri.toString())
 
                     ProfileScreenEvent.Save -> {}
-                    ProfileScreenEvent.Logout -> isSignedIn = false
+                    else -> {}
                 }
             })
             return state
@@ -88,7 +85,6 @@ data class ProfileViewState(
         eventSink(ProfileScreenEvent.Logout)
     }
 }
-
 
 sealed interface ProfileScreenEvent {
     object ConsumeError : ProfileScreenEvent

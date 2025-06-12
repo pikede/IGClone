@@ -27,18 +27,16 @@ internal class ProfileViewModel @Inject constructor(
     private val signOut: SignOut,
     private val uploadImage: UploadImage,
     private val updatePostUserImage: UpdatePostUserImage,
-    private val getUserId: GetUserId
-    ) : ViewModel() {
+    private val getUserId: GetUserId,
+) : ViewModel() {
     private val default = ProfileViewState.Companion.Empty
     private val inProgressState = MutableStateFlow(default.inProgress)
-    private val isSignedInState = MutableStateFlow(default.isSignedIn)
     private val userState = MutableStateFlow(default.user)
     private val notificationState = MutableStateFlow(default.notification)
     private val errorState = MutableStateFlow(default.error)
 
     val state = combine(
         inProgressState,
-        isSignedInState,
         userState,
         notificationState,
         errorState,
@@ -52,12 +50,9 @@ internal class ProfileViewModel @Inject constructor(
 
     private fun getUserData() = viewModelScope.launch {
         inProgressState.value = true
-        getUser.getResult().onSuccess {
-            userState.value = it
-            isSignedInState.value = true
-        }.onFailure {
-            errorState.value = it
-        }
+        getUser.getResult()
+            .onSuccess { userState.value = it }
+            .onFailure { errorState.value = it }
         inProgressState.value = false
     }
 
@@ -78,6 +73,7 @@ internal class ProfileViewModel @Inject constructor(
                 username = userState.value?.userName,
                 bio = userState.value?.bio,
             )
+
             is ProfileScreenEvent.UpdateProfileImageUrl -> uploadProfileImage(event.uri)
             ProfileScreenEvent.Logout -> onLogout()
         }
@@ -103,7 +99,7 @@ internal class ProfileViewModel @Inject constructor(
             .onFailure { errorState.value = it }
     }
 
-    private fun uploadProfileImage(uri: Uri) = viewModelScope.launch{
+    private fun uploadProfileImage(uri: Uri) = viewModelScope.launch {
         uploadImage(
             uri = uri,
             onSuccess = {
@@ -134,7 +130,6 @@ internal class ProfileViewModel @Inject constructor(
 
     private fun onLogout() = viewModelScope.launch {
         signOut.execute()
-        isSignedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
     }

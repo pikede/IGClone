@@ -29,8 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.instagram.DestinationScreen
-import com.example.instagram.common.ui.navigation.navigateTo
+import com.example.instagram.common.ui.navigation.logOutAndClearBackstack
 import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
@@ -71,7 +70,7 @@ fun ProfileScreen(
             onSave = { state.onSave() }, // todo tell previous composable to reload when saving
             onLogout = {
                 state.onLogout()
-                navigateTo(navController, DestinationScreen.Login)
+                logOutAndClearBackstack(navController)
             }
         )
     }

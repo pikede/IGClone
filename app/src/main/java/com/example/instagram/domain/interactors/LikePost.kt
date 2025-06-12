@@ -8,8 +8,7 @@ import javax.inject.Inject
 
 class LikePost @Inject constructor(
     private val db: FirebaseFirestore,
-) :
-    Interactor<LikePost.Params, Unit>() {
+) : Interactor<LikePost.Params, Unit>() {
     data class Params(
         val postId: String,
         val likes: List<String>,

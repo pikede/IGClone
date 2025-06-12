@@ -121,30 +121,22 @@ class IgViewModel @Inject constructor(
                     else -> createUser()
                 }
             }
-            .onFailure { exception ->
-                errorState.value = exception
-            }
+            .onFailure { exception -> errorState.value = exception }
         inProgressState.value = false
     }
 
     private fun createUser() = viewModelScope.launch {
-        createUser.execute(
+        createUser.getResult(
             CreateUser.Params(
                 email = emailState.value.orEmpty(),
-                password = passwordState.value.orEmpty(),
-                onCompleteListener = { task ->
-                    when {
-                        task.isSuccessful -> {
-                            signedInState.value = true
-                            createOrUpdateProfile(username = userNameState.value)
-                        }
-
-                        else -> errorState.value = task.exception ?: UserCreationFailedException
-                    }
-                    inProgressState.value = false
-                }
+                password = passwordState.value.orEmpty()
             )
-        )
+        ).onSuccess {
+            signedInState.value = true
+            createOrUpdateProfile(username = userNameState.value)
+        }.onFailure {
+            errorState.value = UserCreationFailedException
+        }
     }
 
     private fun createOrUpdateProfile(
@@ -188,7 +180,7 @@ class IgViewModel @Inject constructor(
         signedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
-        searchedPosts.value = listOf() // TODO add this to eventual interactor, need to clear search for app restart as the search will have old results if it's not cleared
+        searchedPosts.value = listOf()
         userFeed.value = listOf()
     }
 
@@ -237,11 +229,12 @@ class IgViewModel @Inject constructor(
             errorState.value = Throwable("Unable to like post")
         }
 
-        val newLikes = arrayListOf<String>()
-        if (likes!!.contains(userId)) {
-            newLikes.addAll(likes.filter { userId != it })
-        } else {
-            newLikes.addAll(likes + userId!!)
+        val newLikes = buildList {
+            if (likes!!.contains(userId)) {
+                addAll(likes.filter { userId != it })
+            } else {
+                addAll(likes + userId!!)
+            }
         }
 
         likePost.getResult(LikePost.Params(postId = postId!!, newLikes))
