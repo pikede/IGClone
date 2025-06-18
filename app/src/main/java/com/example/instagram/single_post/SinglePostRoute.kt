@@ -35,7 +35,7 @@ import coil.compose.rememberImagePainter
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonDivider
-import com.example.instagram.core_ui_components.CommonImage
+import com.example.instagram.core_ui_components.images.CommonImage
 import com.example.instagram.core_ui_components.ShowErrorModal
 import com.example.instagram.ui.theme.InstagramTheme
 

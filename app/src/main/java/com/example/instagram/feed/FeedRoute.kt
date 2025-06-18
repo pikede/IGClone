@@ -44,10 +44,11 @@ import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.NavParam
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.common.util.Constants.SINGLE_POST
-import com.example.instagram.core_ui_components.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.LikeAnimation
-import com.example.instagram.core_ui_components.UserImageCard
+import com.example.instagram.core_ui_components.images.CommonAsyncImage
+import com.example.instagram.core_ui_components.images.CommonImage
+import com.example.instagram.core_ui_components.images.UserImageCard
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 import kotlinx.coroutines.delay
@@ -192,8 +193,8 @@ fun Post(
                             onTap = { onPostClick.invoke() }
                         )
                     }
-                    .defaultMinSize(minHeight = 150.dp)
-                CommonImage(
+                    .defaultMinSize(minHeight = 50.dp)
+                CommonAsyncImage(
                     data = postData.postImage,
                     modifier = postImageModifier,
                     contentScale = ContentScale.FillWidth
