@@ -7,9 +7,10 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,6 +18,13 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.instagram.R
+import kotlinx.coroutines.delay
+
+enum class AnimationType {
+    Like,
+    Dislike,
+    None
+}
 
 private enum class LikeIconSize {
     SMALL,
@@ -24,11 +32,20 @@ private enum class LikeIconSize {
 }
 
 @Composable
-fun LikeAnimation(isLike: Boolean = true, modifier: Modifier = Modifier) {
-    var sizeState by remember { mutableStateOf(LikeIconSize.SMALL) }
+fun LikeDislikeAnimation(
+    animationType: AnimationType,
+    modifier: Modifier = Modifier,
+    onAnimationEnd: (() -> Unit)? = null,
+) {
+    var sizeState by rememberSaveable { mutableStateOf(LikeIconSize.SMALL) }
     var transition = updateTransition(targetState = sizeState, label = "")
+
+    LaunchedEffect(animationType) {
+        delay(2000)
+        onAnimationEnd?.invoke()
+    }
+
     val size by transition.animateDp(
-        label = "",
         transitionSpec = {
             spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -41,11 +58,14 @@ fun LikeAnimation(isLike: Boolean = true, modifier: Modifier = Modifier) {
         }
     }
 
-    Image(
-        painter = painterResource(id = if (isLike) R.drawable.ic_like else R.drawable.ic_dislike),
-        contentDescription = "",
-        modifier = modifier.size(size = size),
-        colorFilter = ColorFilter.tint(color = if (isLike) Color.Red else Color.Gray)
-    )
+    if (animationType != AnimationType.None) {
+        var isLike = animationType == AnimationType.Like
+        Image(
+            painter = painterResource(id = if (isLike == true) R.drawable.ic_like else R.drawable.ic_dislike),
+            contentDescription = if (isLike == true) "like" else "dislike",
+            modifier = modifier.size(size = size),
+            colorFilter = ColorFilter.tint(color = if (isLike == true) Color.Red else Color.Gray)
+        )
+    }
     sizeState = LikeIconSize.LARGE
 }
