@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui_components
+package com.example.instagram.core_ui_components.images
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
@@ -11,19 +11,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.example.instagram.R
+import com.example.instagram.core_ui_components.CommonProgressSpinner
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun CommonImage(
     data: String?,
-    modifier: Modifier = Modifier.wrapContentSize(),
+    modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
     val painter = rememberImagePainter(data = data)
@@ -31,11 +36,32 @@ fun CommonImage(
         painter = painter,
         contentDescription = null,
         contentScale = contentScale,
-        modifier = modifier,
+        modifier = modifier.wrapContentSize(),
     )
     if (painter.state is ImagePainter.State.Loading) {
         CommonProgressSpinner()
     }
+}
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun CommonAsyncImage(
+    data: String?,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale,
+) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .memoryCacheKey(data)
+            .data(data)
+            .crossfade(true)
+            .build(),
+        placeholder = painterResource(R.drawable.ic_launcher_foreground),
+        error = painterResource(R.drawable.ic_launcher_foreground),
+        contentDescription = null,
+        contentScale = contentScale,
+        modifier = modifier,
+    )
 }
 
 @Composable

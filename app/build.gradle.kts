@@ -77,6 +77,9 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(libs.coil)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
 
     implementation(libs.firebase.auth)
     implementation(platform(libs.firebase.bom))

@@ -45,9 +45,9 @@ import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.common.util.Constants.IMAGE_URI
-import com.example.instagram.core_ui_components.CommonImage
+import com.example.instagram.core_ui_components.images.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
-import com.example.instagram.core_ui_components.UserImageCard
+import com.example.instagram.core_ui_components.images.UserImageCard
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 

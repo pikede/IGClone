@@ -2,12 +2,15 @@ package com.example.instagram.domain.interactors
 
 import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.domain.core_domain.Interactor
+import com.example.instagram.domain.network.CoroutineDispatchers
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class LikePost @Inject constructor(
     private val db: FirebaseFirestore,
+    private val dispatcher: CoroutineDispatchers,
 ) : Interactor<LikePost.Params, Unit>() {
     data class Params(
         val postId: String,
@@ -15,7 +18,9 @@ class LikePost @Inject constructor(
     )
 
     override suspend fun doWork(params: Params) {
-        db.collection(POSTS).document(params.postId).update("likes", params.likes)
-            .await()
+        withContext(dispatcher.io) {
+            db.collection(POSTS).document(params.postId).update("likes", params.likes)
+                .await()
+        }
     }
 }

@@ -39,7 +39,7 @@ class IgViewModel @Inject constructor(
     private val getGeneralFeed: GetGeneralFeed,
     private val getPersonalizedFeed: GetPersonalizedFeed,
     private val likePost: LikePost,
-    private val searchPosts: SearchPosts
+    private val searchPosts: SearchPosts,
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -223,14 +223,17 @@ class IgViewModel @Inject constructor(
 
     fun onLikePost(postData: PostData) = viewModelScope.launch {
         val postId = postData.postId
-        val likes = postData.likes
         val userId = userState.value?.userId
-        require(postId.isNullOrEmpty() || likes.isNullOrEmpty() || userId.isNullOrEmpty()) {
-            errorState.value = Throwable("Unable to like post")
+        runCatching {
+            require(!postId.isNullOrEmpty() || !userId.isNullOrEmpty()) { Throwable("Unable to like post") }
+        }.onFailure {
+            errorState.value = it
+            return@launch
         }
+        val likes = postData.likes ?: emptyList()
 
         val newLikes = buildList {
-            if (likes!!.contains(userId)) {
+            if (likes.contains(userId)) {
                 addAll(likes.filter { userId != it })
             } else {
                 addAll(likes + userId!!)
