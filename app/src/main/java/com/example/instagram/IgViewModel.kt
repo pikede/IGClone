@@ -49,10 +49,10 @@ class IgViewModel @Inject constructor(
     private val inProgressState = MutableStateFlow(default.inProgress)
     private val userState = MutableStateFlow(default.user)
     private val notificationState = MutableStateFlow(default.notification)
+    private val userFeedState = MutableStateFlow<List<PostData>>(listOf())
     private val errorState = MutableStateFlow(default.error)
     val searchedPosts = MutableStateFlow(default.searchedPosts)
     val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
-    val userFeed = mutableStateOf<List<PostData>>(listOf())
     val isFeedInProgress = mutableStateOf(false)
 
     internal val state = combine(
@@ -65,6 +65,7 @@ class IgViewModel @Inject constructor(
         notificationState,
         errorState,
         searchedPosts,
+        userFeedState,
         searchedPostsProgress,
         eventSink(),
         ::SignupScreenState
@@ -134,6 +135,7 @@ class IgViewModel @Inject constructor(
         ).onSuccess {
             signedInState.value = true
             createOrUpdateProfile(username = userNameState.value)
+            getPersonalizedFeed()
         }.onFailure {
             errorState.value = UserCreationFailedException
         }
@@ -181,7 +183,7 @@ class IgViewModel @Inject constructor(
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
         searchedPosts.value = listOf()
-        userFeed.value = listOf()
+        userFeedState.value = listOf()
     }
 
     private suspend fun getPersonalizedFeed() {
@@ -191,7 +193,7 @@ class IgViewModel @Inject constructor(
             getPersonalizedFeed.getResult(following)
                 .onSuccess { posts ->
                     if (posts.isNotEmpty()) {
-                        userFeed.value = posts
+                        userFeedState.value = posts
                     } else {
                         getGeneralFeed()
                     }
@@ -213,7 +215,7 @@ class IgViewModel @Inject constructor(
         val timeAfter = currentTime - difference
         getGeneralFeed.getResult(timeAfter)
             .onSuccess { posts ->
-                userFeed.value = posts
+                userFeedState.value = posts
                 isFeedInProgress.value = false
             }.onFailure {
                 errorState.value = it

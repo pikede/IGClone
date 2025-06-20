@@ -13,7 +13,6 @@ class UpdatePostUserImage @Inject constructor(
     private val getUserPosts: GetUserPosts,
 ) : Interactor<String, Unit>() {
     override suspend fun doWork(params: String) {
-
         return withContext(Dispatchers.IO) {
             val userPosts = getUserPosts.execute()
 
@@ -38,5 +37,4 @@ class UpdatePostUserImage @Inject constructor(
             batch.commit().await()
         }
     }
-
 }
