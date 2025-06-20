@@ -4,18 +4,23 @@ import com.example.instagram.common.util.Constants.POSTS
 import com.example.instagram.common.util.Constants.SEARCH_TERMS
 import com.example.instagram.common.util.convertPosts
 import com.example.instagram.domain.core_domain.Interactor
+import com.example.instagram.domain.network.CoroutineDispatchers
 import com.example.instagram.models.PostData
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SearchPosts @Inject constructor(
     private val db: FirebaseFirestore,
+    private val dispatcher: CoroutineDispatchers,
 ) : Interactor<String, List<PostData>>() {
     override suspend fun doWork(params: String): List<PostData> {
-        return db.collection(POSTS).whereArrayContains(SEARCH_TERMS, params)
-            .get()
-            .await()
-            .let { convertPosts(it) }
+        return withContext(dispatcher.io) {
+            val posts = db.collection(POSTS).whereArrayContains(SEARCH_TERMS, params)
+                .get()
+                .await()
+            convertPosts(posts)
+        }
     }
 }

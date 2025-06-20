@@ -17,6 +17,7 @@ internal data class SignupScreenState(
     val notification: OneTimeEvent<String>? = null,
     val error: Throwable? = null,  // TODO create custom throwable type with it's invokable composable that takes in a custom message
     val searchedPosts: List<PostData> = listOf(),
+    val userFeed: List<PostData> = listOf(),
     val searchedPostsProgress: Boolean = false,
     val eventSink: ViewEventSink<SignupScreenEvent> = {},
 ) {
