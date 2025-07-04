@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +37,7 @@ import coil.compose.rememberImagePainter
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.ShowErrorModal
-import com.example.instagram.core_ui_components.images.CommonImage
+import com.example.instagram.single_post.components.SinglePostImage
 import com.example.instagram.ui.theme.InstagramTheme
 
 @Composable
@@ -153,18 +151,7 @@ private fun SinglePostDisplay(
                 }
             }
         }
-        Box(modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()) {
-            val modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-            CommonImage(
-                data = state.postData?.postImage,
-                modifier = modifier,
-                contentScale = ContentScale.FillWidth
-            )
-        }
+        SinglePostImage(state)
         Row(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
