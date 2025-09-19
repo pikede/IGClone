@@ -15,7 +15,11 @@ class CreatePost @Inject constructor(
     private val dispatchers: CoroutineDispatchers,
 ) : Interactor<CreatePost.Params, Unit>() {
 
-    data class Params(val imageUri: String, val description: String?)
+    data class Params(
+        val imageUri: String? = null,
+        val videoUri: String? = null,
+        val description: String? = null,
+    )
 
     override suspend fun doWork(params: Params) {
         withContext(dispatchers.io) {
@@ -33,13 +37,16 @@ class CreatePost @Inject constructor(
                 userId = currentUser.userId,
                 username = currentUser.userName,
                 userImage = currentUser.imageUrl,
-                postImage = params.imageUri.toString(),
+                postImage = params.imageUri,
+                postVideo = params.videoUri,
                 postDescription = params.description,
                 time = System.currentTimeMillis(),
                 likes = listOf(),
                 searchTerms = searchTerms
             )
-            db.collection("posts").document(postUuid).set(post)
+            db.collection("posts")
+                .document(postUuid)
+                .set(post)
                 .await()
         }
     }

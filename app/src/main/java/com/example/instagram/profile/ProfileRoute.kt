@@ -33,9 +33,9 @@ import com.example.instagram.common.ui.navigation.logOutAndClearBackstack
 import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
 import com.example.instagram.core_ui_components.CommonDivider
-import com.example.instagram.core_ui_components.images.CommonImage
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.FullscreenLoading
+import com.example.instagram.core_ui_components.image.CommonImage
 
 // todo rename package and files to edit profile
 @Composable

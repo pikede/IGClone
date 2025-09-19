@@ -1,4 +1,4 @@
-package com.example.instagram.core_ui_components.images
+package com.example.instagram.core_ui_components.image
 
 import android.content.Context
 import coil3.ImageLoader

@@ -10,4 +10,7 @@ object Constants {
     const val COMMENTS = "comments"
     const val POST_ID = "postId"
     const val IMAGE_URI = "image/*"
+    const val VIDEO_URI = "video/*"
+    const val IMAGE_DIRECTORY = "/image"
+    const val VIDEO_DIRECTORY = "/video"
 }

@@ -4,7 +4,7 @@ import android.app.Application
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import com.example.instagram.core_ui_components.images.CoilUtil
+import com.example.instagram.core_ui_components.image.CoilUtil
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp

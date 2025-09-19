@@ -1,5 +1,6 @@
 package com.example.instagram.feed
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -47,9 +49,10 @@ import com.example.instagram.core_ui_components.AnimationType
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.LikeDislikeAnimation
 import com.example.instagram.core_ui_components.ShowErrorModal
-import com.example.instagram.core_ui_components.images.CommonAsyncImage
-import com.example.instagram.core_ui_components.images.CommonImage
-import com.example.instagram.core_ui_components.images.UserImageCard
+import com.example.instagram.core_ui_components.image.CommonAsyncImage
+import com.example.instagram.core_ui_components.image.CommonImage
+import com.example.instagram.core_ui_components.image.UserImageCard
+import com.example.instagram.core_ui_components.video.VideoPlayer
 import com.example.instagram.models.PostData
 import com.example.instagram.ui.theme.InstagramTheme
 
@@ -73,7 +76,7 @@ private fun Feed(
         navController = navController
     )
 
-    // todo whenever resume here get personalize feed
+    // todo refresh feed every 7 minutes if app in foreground, resume here get personalize feed
 }
 
 @Composable
@@ -125,6 +128,7 @@ fun PostsList(
 ) {
     Box(modifier = modifier) {
         LazyColumn {
+            Log.d("Post ::logged***", "Video $posts")
             items(items = posts, key = { it.hashCode() }) {
                 Post(
                     postData = it,
@@ -136,7 +140,8 @@ fun PostsList(
                             destination = DestinationScreen.SinglePost(it.postId),
                             NavParam(SINGLE_POST, it)
                         )
-                    }
+                    },
+                    modifier = Modifier.heightIn(min = 70.dp)
                 )
             }
         }
@@ -180,6 +185,7 @@ fun Post(
 
                 Text(text = postData.username.orEmpty(), modifier = Modifier.padding(4.dp))
             }
+            // todo extract to seperate method/component
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val postImageModifier = Modifier
                     .fillMaxWidth()
@@ -198,12 +204,19 @@ fun Post(
                         )
                     }
                     .defaultMinSize(minHeight = 50.dp)
-                CommonAsyncImage(
-                    data = postData.postImage,
-                    modifier = postImageModifier,
-                    contentScale = ContentScale.FillWidth
-                )
 
+                when {
+                    postData.postVideo.isNullOrEmpty() -> CommonAsyncImage(
+                        data = postData.postImage,
+                        modifier = postImageModifier,
+                        contentScale = ContentScale.FillWidth
+                    )
+
+                    else -> {
+                        Log.d("logged**","feed video**")
+                        VideoPlayer(videoUri = postData.postVideo, modifier = postImageModifier)
+                    }
+                }
                 LikeDislikeAnimation(
                     animationType = animationType,
                     onAnimationEnd = { animationType = AnimationType.None },

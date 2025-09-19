@@ -56,13 +56,15 @@ internal class MyPostsViewModel @Inject constructor(
         inProgressState.value = false
     }
 
+    // wrapper for refreshing from view
+    internal fun onRefresh() = viewModelScope.launch { refreshPosts() }
+
     private fun eventSink(): ViewEventSinkFlow<MyPostsScreenEvent> = flowOf { event ->
         when (event) {
             MyPostsScreenEvent.ConsumeError -> errorState.value = null
         }
     }
-
-    internal suspend fun refreshPosts() {
+    private suspend fun refreshPosts() {
         refreshPostsProgressState.value = true
         getUserPosts.getResult()
             .onSuccess { sortedPosts -> postsState.value = sortedPosts }

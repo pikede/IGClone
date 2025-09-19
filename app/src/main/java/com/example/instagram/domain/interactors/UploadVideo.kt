@@ -9,21 +9,30 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
-class UploadImage @Inject constructor(
+class UploadVideo @Inject constructor(
     private val storage: FirebaseStorage,
     private val dispatchers: CoroutineDispatchers,
 ) : Interactor<Uri, Uri?>() {
 
     companion object{
-        private const val IMAGES_UPLOAD_PATH = "images/"
+        private const val VIDEOS_UPLOAD_PATH = "videos/"
     }
+
     override suspend fun doWork(params: Uri): Uri? {
         return withContext(dispatchers.io) {
             val storageRef = storage.reference
             val uuid = UUID.randomUUID()
-            val imageRef = storageRef.child("$IMAGES_UPLOAD_PATH$uuid")
-            val uploadTask = imageRef.putFile(params).await()
+            val videoRef = storageRef.child("$VIDEOS_UPLOAD_PATH/$uuid")
+            val uploadTask = videoRef.putFile(params).await()
             uploadTask.metadata?.reference?.downloadUrl?.await()
         }
     }
 }
+
+/*
+todo Coroutine worker for the upload??
+todo service fore ground service upload the video show progress in the notification
+
+notification with app logo
+
+ */

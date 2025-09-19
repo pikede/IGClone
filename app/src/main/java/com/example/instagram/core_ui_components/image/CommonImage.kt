@@ -1,6 +1,7 @@
-package com.example.instagram.core_ui_components.images
+package com.example.instagram.core_ui_components.image
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -52,8 +53,9 @@ fun CommonAsyncImage(
 ) {
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
-            .memoryCacheKey(data)
             .data(data)
+            .memoryCacheKey(data)
+            .diskCacheKey(data)
             .crossfade(true)
             .build(),
         placeholder = painterResource(R.drawable.ic_launcher_foreground),
@@ -79,6 +81,7 @@ fun UserImageCard(
             userImage.isNullOrEmpty() -> {
                 Image(
                     painter = painterResource(R.drawable.ic_user),
+                    modifier = Modifier.fillMaxSize(),
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(color = Color.Gray)
                 )

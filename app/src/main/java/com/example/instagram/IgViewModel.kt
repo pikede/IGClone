@@ -1,6 +1,5 @@
 package com.example.instagram
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +7,7 @@ import com.example.instagram.auth.signup.SignupScreenEvent
 import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.extensions.OneTimeEvent
 import com.example.instagram.common.extensions.ViewEventSinkFlow
+import com.example.instagram.common.util.logThis
 import com.example.instagram.coroutineExtensions.combine
 import com.example.instagram.coroutineExtensions.stateInDefault
 import com.example.instagram.domain.UserCreationFailedException
@@ -18,7 +18,6 @@ import com.example.instagram.domain.interactors.GetGeneralFeed
 import com.example.instagram.domain.interactors.GetPersonalizedFeed
 import com.example.instagram.domain.interactors.GetUser
 import com.example.instagram.domain.interactors.LikePost
-import com.example.instagram.domain.interactors.SearchPosts
 import com.example.instagram.domain.interactors.SignOut
 import com.example.instagram.domain.interactors.SignUp
 import com.example.instagram.models.PostData
@@ -39,7 +38,6 @@ class IgViewModel @Inject constructor(
     private val getGeneralFeed: GetGeneralFeed,
     private val getPersonalizedFeed: GetPersonalizedFeed,
     private val likePost: LikePost,
-    private val searchPosts: SearchPosts,
 ) : ViewModel() {
     private val default = SignupScreenState()
     private val userNameState = MutableStateFlow(default.userName)
@@ -51,8 +49,6 @@ class IgViewModel @Inject constructor(
     private val notificationState = MutableStateFlow(default.notification)
     private val userFeedState = MutableStateFlow<List<PostData>>(listOf())
     private val errorState = MutableStateFlow(default.error)
-    val searchedPosts = MutableStateFlow(default.searchedPosts)
-    val searchedPostsProgress = MutableStateFlow(default.searchedPostsProgress)
     val isFeedInProgress = mutableStateOf(false)
 
     internal val state = combine(
@@ -64,9 +60,7 @@ class IgViewModel @Inject constructor(
         userState,
         notificationState,
         errorState,
-        searchedPosts,
         userFeedState,
-        searchedPostsProgress,
         eventSink(),
         ::SignupScreenState
     ).stateInDefault(viewModelScope, default)
@@ -116,6 +110,7 @@ class IgViewModel @Inject constructor(
             .onSuccess { documents ->
                 when {
                     documents.size() > 0 -> {
+                        // todo move to repo/interactor
                         errorState.value = Throwable("Username already exists")
                     }
 
@@ -162,36 +157,22 @@ class IgViewModel @Inject constructor(
         inProgressState.value = false
     }
 
-    fun searchPosts(searchTerm: String) = viewModelScope.launch {
-        if (searchTerm.isNotEmpty()) {
-            searchPosts.getResult(searchTerm)
-                .onSuccess {
-                    searchedPosts.value = it
-                    searchedPostsProgress.value = false
-                }
-                .onFailure {
-                    Log.e("*** Cannot search posts", it.localizedMessage.orEmpty())
-                    errorState.value = it
-                    searchedPostsProgress.value = false
-                }
-        }
-    }
-
     private suspend fun onLogout() {
         signOut.execute()
         signedInState.value = false
         userState.value = null
         notificationState.value = OneTimeEvent("Logout")
-        searchedPosts.value = listOf()
         userFeedState.value = listOf()
     }
 
     private suspend fun getPersonalizedFeed() {
-        val following = userState.value?.following
-        if (!following.isNullOrEmpty()) {
+        val followingUserIds = userState.value?.following.orEmpty()
+        if (!followingUserIds.isNullOrEmpty()) {
             isFeedInProgress.value = true
-            getPersonalizedFeed.getResult(following)
+            val requiredUserIds = followingUserIds + userState.value?.userId.orEmpty()
+            getPersonalizedFeed.getResult(requiredUserIds)
                 .onSuccess { posts ->
+                    posts.logThis()
                     if (posts.isNotEmpty()) {
                         userFeedState.value = posts
                     } else {
@@ -215,12 +196,12 @@ class IgViewModel @Inject constructor(
         val timeAfter = currentTime - difference
         getGeneralFeed.getResult(timeAfter)
             .onSuccess { posts ->
+                posts.logThis()
                 userFeedState.value = posts
-                isFeedInProgress.value = false
             }.onFailure {
                 errorState.value = it
-                isFeedInProgress.value = false
             }
+        isFeedInProgress.value = false
     }
 
     fun onLikePost(postData: PostData) = viewModelScope.launch {

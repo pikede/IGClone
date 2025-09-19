@@ -19,9 +19,10 @@ import com.example.instagram.auth.signup.SignupRoute
 import com.example.instagram.comments.CommentsRoute
 import com.example.instagram.common.util.Constants.POST_ID
 import com.example.instagram.feed.FeedRoute
-import com.example.instagram.feed.SearchRoute
+import com.example.instagram.search_post.SearchRoute
 import com.example.instagram.my_posts.MyPostsRoute
 import com.example.instagram.new_post.NewPostRoute
+import com.example.instagram.new_video_post.NewVideoPostRoute
 import com.example.instagram.profile.ProfileRoute
 import com.example.instagram.single_post.SinglePostRoute
 import com.example.instagram.ui.theme.InstagramTheme
@@ -62,7 +63,10 @@ sealed interface DestinationScreen {
     object Profile : DestinationScreen
 
     @Serializable
-    data class NewPost(val imageUri: String) : DestinationScreen
+    data class NewImagePost(val imageUri: String) : DestinationScreen
+
+    @Serializable
+    data class NewVideoPost(val videoUri: String) : DestinationScreen
 
     @Serializable
     data class SinglePost(val postId: String?) : DestinationScreen
@@ -95,9 +99,21 @@ fun InstagramApp(
         composable<DestinationScreen.Profile> {
             ProfileRoute(navController = navController, modifier = modifier)
         }
-        composable<DestinationScreen.NewPost> { navBackstackEntry ->
-            val imageUri = navBackstackEntry.toRoute<DestinationScreen.NewPost>().imageUri
-            NewPostRoute(navController = navController, encodedUri = imageUri, modifier = modifier)
+        composable<DestinationScreen.NewImagePost> { navBackstackEntry ->
+            val newPost = navBackstackEntry.toRoute<DestinationScreen.NewImagePost>()
+            NewPostRoute(
+                navController = navController,
+                encodedUri = newPost.imageUri,
+                modifier = modifier
+            )
+        }
+        composable<DestinationScreen.NewVideoPost> { navBackstackEntry ->
+            val newPost = navBackstackEntry.toRoute<DestinationScreen.NewVideoPost>()
+            NewVideoPostRoute(
+                navController = navController,
+                encodedVideoUri = newPost.videoUri,
+                modifier = modifier
+            )
         }
         composable<DestinationScreen.SinglePost> { navBackStackEntry ->
             SinglePostRoute(

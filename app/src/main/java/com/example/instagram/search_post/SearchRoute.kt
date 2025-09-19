@@ -1,7 +1,8 @@
-package com.example.instagram.feed
+package com.example.instagram.search_post
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -12,12 +13,10 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -30,16 +29,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.instagram.DestinationScreen
-import com.example.instagram.IgViewModel
-import com.example.instagram.auth.signup.SignupScreenState
 import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.core_ui_components.BlackTransparentTextContainer
-import com.example.instagram.my_posts.PostList
+import com.example.instagram.my_posts.components.PostList
 import com.example.instagram.ui.theme.InstagramTheme
 
-// TODO add search viewmodel currently using [@IgViewModel]
 @Composable
 fun SearchRoute(navController: NavController, modifier: Modifier = Modifier) {
     SearchScreen(navController = navController, modifier = modifier)
@@ -50,53 +46,58 @@ fun SearchRoute(navController: NavController, modifier: Modifier = Modifier) {
 private fun SearchScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    viewModel: IgViewModel = hiltViewModel(),
+    viewModel: SearchPostsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    SearchScreen(modifier, viewModel, state, navController)
+    SearchScreen(state = state, navController = navController, modifier = modifier)
 }
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun SearchScreen(
-    modifier: Modifier,
-    vm: IgViewModel,
-    state: SignupScreenState,
+    state: SearchPostState,
     navController: NavController,
+    modifier: Modifier,
 ) {
-    var searchTerm by rememberSaveable { mutableStateOf("") }
-
-    Column(modifier) {
-        SearchBar(
-            searchTerm = searchTerm,
-            onSearchChange = { searchTerm = it },
-            onSearch = { vm.searchPosts(searchTerm) })
-
-        PostList(
-            isContextLoading = false,
-            postsLoading = state.searchedPostsProgress,
-            posts = state.searchedPosts,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(8.dp),
-        ) { post ->
-            navigateTo(
+    Scaffold(
+        topBar = {
+            SearchPostTopBar(
+                searchTerm = state.searchTerm,
+                onSearchChange = { state.onUpdateSearchTerm(it) },
+                onSearch = { state.onSearch() })
+        },
+        bottomBar = {
+            BottomNavigationMenu(
+                selectedItem = BottomNavigationItem.SEARCH,
                 navController = navController,
-                destination = DestinationScreen.SinglePost(post.postId)
             )
+        },
+        modifier = modifier
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) { // todo qhy does this have to be a row or column for this to work?
+                // todo add search postlist
+            PostList(
+                isContextLoading = false,
+                postsLoading = state.inProgress,
+                posts = state.searchedPosts,
+                modifier = Modifier.fillMaxSize(),
+            ) { post ->
+                navigateTo(
+                    navController = navController,
+                    destination = DestinationScreen.SinglePost(post.postId)
+                )
+            }
         }
-
-        BottomNavigationMenu(
-            selectedItem = BottomNavigationItem.SEARCH,
-            navController = navController
-        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(
+fun SearchPostTopBar(
     searchTerm: String,
     onSearchChange: (String) -> Unit,
     onSearch: () -> Unit,
