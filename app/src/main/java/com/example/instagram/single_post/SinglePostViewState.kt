@@ -35,6 +35,7 @@ data class SinglePostViewState(
                     Empty.copy(
                         inProgress = false,
                         user = Fakes.User,
+                        error = error,
                     )
                 )
             }

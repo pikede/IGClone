@@ -14,7 +14,7 @@ data class User(
     var bio: String? = null,
     var following: List<String>? = null,
     var followers: List<String>? = null,
-    var posts: List<String>? = null,
+    var posts: List<PostData>? = null,
 ) : Parcelable {
     fun toMap() = mapOf(
         "userId" to userId,

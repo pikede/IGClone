@@ -37,6 +37,7 @@ import coil.compose.rememberImagePainter
 import com.example.instagram.DestinationScreen
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.ShowErrorModal
+import com.example.instagram.core_ui_components.video.VideoPlayer
 import com.example.instagram.single_post.components.SinglePostImage
 import com.example.instagram.ui.theme.InstagramTheme
 
@@ -64,7 +65,7 @@ private fun SinglePost(
         vm.getComments()
     }
 
-    SinglePostScreen(
+    SinglePost(
         state = state,
         navController = navController,
         modifier = modifier,
@@ -73,7 +74,7 @@ private fun SinglePost(
 }
 
 @Composable
-private fun SinglePostScreen(
+private fun SinglePost(
     state: SinglePostViewState,
     navController: NavController,
     modifier: Modifier = Modifier,
@@ -90,7 +91,7 @@ private fun SinglePostScreen(
             .wrapContentHeight()
             .padding(8.dp)
     ) { paddingValues ->
-        SinglePostDisplay(
+        SinglePostContent(
             state = state,
             navController = navController,
             commentsSize = commentsSize,
@@ -105,18 +106,20 @@ private fun SinglePostScreen(
     }
 }
 
-// TODO split into image, likes descriptions, component
+// TODO split into image, likes descriptions, and move to component
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-private fun SinglePostDisplay(
+private fun SinglePostContent(
     state: SinglePostViewState,
     navController: NavController,
     commentsSize: Int,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -151,13 +154,23 @@ private fun SinglePostDisplay(
                 }
             }
         }
-        SinglePostImage(state)
+
+        // todo convert to type check in postdata object
+        val post = state.postData
+        if (post != null) {
+            when {
+                !post.postImage.isNullOrEmpty() -> SinglePostImage(postImage = post.postImage)
+                !post.postVideo.isNullOrEmpty() -> VideoPlayer(post.postVideo)
+                else -> Text(text = "Error no video or image to show in this post")
+            }
+        }
+
         Row(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = if(state.postData?.likes?.isEmpty() == true) R.drawable.ic_dislike else R.drawable.ic_like),
+                painter = painterResource(id = if (state.postData?.likes?.isEmpty() == true) R.drawable.ic_dislike else R.drawable.ic_like),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 colorFilter = ColorFilter.tint(Color.Red)
@@ -192,7 +205,7 @@ private fun SinglePostDisplay(
 @Preview(showBackground = true)
 @Composable
 private fun SinglePostScreenPreview() = InstagramTheme {
-    SinglePostScreen(
+    SinglePost(
         state = SinglePostViewState.preview(),
         navController = rememberNavController(),
         commentsSize = 0

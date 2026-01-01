@@ -16,8 +16,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import com.example.instagram.core_ui_components.extensions.detectTransformGesturesEnd
-import com.example.instagram.core_ui_components.images.CommonImage
-import com.example.instagram.single_post.SinglePostViewState
+import com.example.instagram.core_ui_components.image.CommonImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 // https://medium.com/@baljindermaan15/creating-image-zoom-in-and-out-in-jetpack-compose-a8b16ad8d2dc
 @Composable
 internal fun ColumnScope.SinglePostImage(
-    state: SinglePostViewState,
+    postImage: String,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -66,7 +65,7 @@ internal fun ColumnScope.SinglePostImage(
                 translationY = offset.y
             )
         CommonImage(
-            data = state.postData?.postImage,
+            data = postImage,
             modifier = modifier,
             contentScale = ContentScale.FillWidth
         )

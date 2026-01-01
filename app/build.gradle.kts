@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
-    id("kotlinx-serialization")
+    id("kotlinx-serialization") // todo is this needed
 }
 
 android {
@@ -89,4 +89,8 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation (libs.androidx.media3.exoplayer)
+    implementation (libs.androidx.media3.ui)
+    implementation (libs.androidx.media3.common)
 }

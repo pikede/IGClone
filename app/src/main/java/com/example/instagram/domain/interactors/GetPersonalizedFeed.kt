@@ -17,10 +17,10 @@ class GetPersonalizedFeed @Inject constructor(
 
     override suspend fun doWork(param: List<String>): List<PostData> {
         return withContext(dispatcher.io) {
-            val temp = db.collection(POSTS).whereIn("userId", param)
+            val posts = db.collection(POSTS).whereIn("userId", param)
                 .get()
                 .await()
-            convertPosts(temp)
+            convertPosts(posts)
         }
     }
 }

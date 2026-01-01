@@ -5,9 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,8 +15,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
@@ -70,7 +68,6 @@ private fun NewPostScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-    val imageUri by remember { mutableStateOf(encodedUri) }
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
@@ -86,9 +83,9 @@ private fun NewPostScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = "Cancel", modifier = Modifier.clickable { navController.popBackStack() })
-            Text(text = "Post", modifier = Modifier.clickable {
+            Text(text = "Post Image", modifier = Modifier.clickable {
                 focusManager.clearFocus()
-                state.onPost(imageUri) {
+                state.onPost(encodedUri) {
                     navController.popBackStack()
                 }
             })
@@ -96,13 +93,11 @@ private fun NewPostScreen(
 
         CommonDivider()
 
-        Image(
-            painter = rememberImagePainter(imageUri),
-            contentDescription = null,
+        NewImagePost(
+            imageUri = encodedUri,
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 150.dp),
-            contentScale = ContentScale.FillWidth
+                .heightIn(min = 100.dp, max = 600.dp)
         )
 
         Row(modifier = Modifier.padding(8.dp)) {
@@ -130,6 +125,15 @@ private fun NewPostScreen(
     state.notification?.ShowEventToast()
 }
 
+@Composable
+private fun NewImagePost(imageUri: String, modifier: Modifier = Modifier) {
+    Image(
+        painter = rememberImagePainter(imageUri),
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = ContentScale.FillWidth
+    )
+}
 
 
 @Preview(showBackground = true)
