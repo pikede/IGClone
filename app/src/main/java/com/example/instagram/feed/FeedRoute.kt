@@ -206,13 +206,13 @@ fun Post(
                     .defaultMinSize(minHeight = 50.dp)
 
                 when {
-                    postData.postVideo.isNullOrEmpty() -> CommonAsyncImage(
+                    postData.isImagePost() -> CommonAsyncImage(
                         data = postData.postImage,
                         modifier = postImageModifier,
                         contentScale = ContentScale.FillWidth
                     )
 
-                    else -> {
+                    postData.postVideo != null -> {
                         Log.d("logged**","feed video**")
                         VideoPlayer(videoUri = postData.postVideo, modifier = postImageModifier)
                     }
