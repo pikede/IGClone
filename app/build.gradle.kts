@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.gms.google.services)
     id("kotlin-parcelize")
-    id("kotlinx-serialization")
+    id("kotlinx-serialization") // todo is this needed
 }
 
 android {

@@ -1,5 +1,6 @@
 package com.example.instagram.core_ui_components.image
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,7 +15,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.ImagePainter
@@ -24,23 +25,38 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.instagram.R
 import com.example.instagram.core_ui_components.CommonProgressSpinner
+import com.example.instagram.ui.theme.InstagramTheme
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun CommonImage(
-    data: String?,
     modifier: Modifier = Modifier,
+    data: String? = null,
+    @DrawableRes imageVector: Int? = null,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
-    val painter = rememberImagePainter(data = data)
-    Image(
-        painter = painter,
-        contentDescription = null,
-        contentScale = contentScale,
-        modifier = modifier.wrapContentSize(),
-    )
-    if (painter.state is ImagePainter.State.Loading) {
-        CommonProgressSpinner()
+    when {
+        data != null -> {
+            val painter = rememberImagePainter(data)
+            Image(
+                painter = painter,
+                contentDescription = null,
+                contentScale = contentScale,
+                modifier = modifier.wrapContentSize(),
+            )
+            if (painter.state is ImagePainter.State.Loading) {
+                CommonProgressSpinner()
+            }
+        }
+
+        imageVector != null -> {
+            Image(
+                painter = painterResource(imageVector),
+                contentDescription = null,
+                contentScale = contentScale,
+                modifier = modifier.wrapContentSize(),
+            )
+        }
     }
 }
 
@@ -92,8 +108,14 @@ fun UserImageCard(
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
-private fun UserImageCardPreview() {
+private fun UserImageCardPreview() = InstagramTheme {
     UserImageCard(userImage = "")
+}
+
+@PreviewLightDark
+@Composable
+private fun CommonImagePreview() = InstagramTheme {
+    CommonImage(imageVector = R.drawable.profile)
 }

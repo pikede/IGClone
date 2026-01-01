@@ -3,7 +3,8 @@ package com.example.instagram.my_posts
 import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -42,9 +43,7 @@ import com.example.instagram.common.ui.navigation.BottomNavigationItem
 import com.example.instagram.common.ui.navigation.BottomNavigationMenu
 import com.example.instagram.common.ui.navigation.navigateTo
 import com.example.instagram.common.util.Constants.IMAGE_DIRECTORY
-import com.example.instagram.common.util.Constants.IMAGE_URI
 import com.example.instagram.common.util.Constants.VIDEO_DIRECTORY
-import com.example.instagram.common.util.Constants.VIDEO_URI
 import com.example.instagram.core_ui_components.CommonProgressSpinner
 import com.example.instagram.core_ui_components.image.UserImageCard
 import com.example.instagram.my_posts.components.PostList
@@ -74,7 +73,7 @@ private fun MyPosts(
 
     LifecycleResumeEffect(Unit) {
 //        vm.onRefresh() todo only refresh when the add is succesful
-        onPauseOrDispose { }//nothing to cleanup
+        onPauseOrDispose { vm.onRefresh() }//nothing to cleanup
     }
 }
 
@@ -85,12 +84,13 @@ private fun MyPosts(
     followers: Int,
     modifier: Modifier = Modifier,
 ) {
+    // https://developer.android.com/training/data-storage/shared/photo-picker#compose
     val newPostImageLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenMultipleDocuments()) { uri ->
-            if (uri.isEmpty()) {
+        rememberLauncherForActivityResult(contract = PickVisualMedia()) { uri ->
+            if (uri == null || uri.path?.isEmpty()== true) {
                 return@rememberLauncherForActivityResult
             }
-            val uriItem = uri.first().toString()
+            val uriItem = uri.path!!
             val route = when {
                 uriItem.contains(IMAGE_DIRECTORY) -> DestinationScreen.NewImagePost(imageUri = uriItem)
                 uriItem.contains(VIDEO_DIRECTORY) -> DestinationScreen.NewVideoPost(uriItem)
@@ -158,14 +158,12 @@ private fun MyPostsEditProfile(navController: NavController) {
 @Composable
 private fun MyPostHeader(
     state: MyPostsViewState,
-    newPostImageLauncher: ManagedActivityResultLauncher<Array<String>, List<@JvmSuppressWildcards Uri>>,
+    newPostImageLauncher: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
     followers: Int,
 ) {
     Row {
         ProfileImage(imageUrl = state.user?.imageUrl, onClick = {
-            newPostImageLauncher.launch(
-                arrayOf(IMAGE_URI, VIDEO_URI)
-            ) // checks for any type of image on the device
+            newPostImageLauncher.launch(PickVisualMediaRequest(PickVisualMedia.ImageAndVideo)) // checks for any type of image and video on the device
         })
         Text(
             text = "${state.posts.size}\nPosts",
